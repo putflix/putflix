@@ -7,6 +7,8 @@ export type SeasonMetadata = SeriesMetadata;
 
 export interface DedupeEntry {
     reference: string;
+    season_reference?: string;
+    series_reference?: string;
 }
 
 export interface File extends Item<FileMetadata> {}

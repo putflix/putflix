@@ -38,24 +38,51 @@ const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: func
     const dedupRef = firestore.collection('dedup_map').doc(dedupId);
     const dedupSnap = await dedupRef.get()
 
-    if (dedupSnap.exists && false) { // disabled for now
+    if (dedupSnap.exists) {
         // We have seen this file already. Move it to the appropriate location
         // in the DB and remove the queue entry. We're done.
 
-        const { reference } = dedupSnap.data() as DedupeEntry;
+        const { reference, season_reference, series_reference } = dedupSnap.data() as DedupeEntry;
         console.log(`Association ${dedupId} -> ${reference} found.`);
         const [type] = reference.split('-', 2);
 
         const batch = firestore.batch();
-        batch.set(
-            firestore.collection('accounts')
-                .doc(ctx.params.accountId)
-                .collection(type)
-                .doc(reference),
-            file,
-        );
+
+        switch (type) {
+            case 'episodes':
+                if (!season_reference || !series_reference) {
+                    throw new Error("Found an episode reference but missing season and series reference.");
+                }
+
+                const seriesRef = firestore.collection('accounts')
+                    .doc(ctx.params.accountId)
+                    .collection('series')
+                    .doc(series_reference);
+                const seasonRef = seriesRef.collection('seasons')
+                    .doc(season_reference);
+                const epRef = seasonRef.collection('episodes')
+                    .doc(reference);
+
+                batch.set(seriesRef, { metadata: {} });
+                batch.set(seasonRef, { metadata: {} });
+                batch.set(epRef, file);
+                break;
+            case 'movies':
+                batch.set(
+                    firestore.collection('accounts')
+                        .doc(ctx.params.accountId)
+                        .collection(type)
+                        .doc(reference),
+                    file,
+                );
+                break;
+            default:
+                throw new Error(`Unknown reference type '${type}'.`);
+        }
+
         batch.delete(queueSnap.ref);
         batch.delete(fileSnap.ref);
+
         await batch.commit();
 
         return;
@@ -80,6 +107,8 @@ const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: func
             return;
         }
 
+        // We know the TV show, but still lack season / episode info
+
         const bestMatch = shows[0];
         const seriesFbId = `series-${bestMatch.id}`;
 
@@ -92,6 +121,8 @@ const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: func
             return;
         }
 
+        // Got the season now, now try to find the appropriate episode
+
         const seasonFbId = `seasons-${season.id}`;
         // tslint:disable-next-line:no-unnecessary-type-assertion
         const { episodes, ...seasonData } = season as any;
@@ -103,6 +134,8 @@ const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: func
             return;
         }
 
+        // Got all the info now, update Firestore...
+
         console.log(`Found season (${season.season_number}) & episode (${episode.episode_number}). Updating Firestore...`);
 
         // tslint:disable-next-line:no-unnecessary-type-assertion
@@ -110,6 +143,8 @@ const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: func
         const episodeFbId = `episodes-${episode.id}`;
 
         const metaCollection = firestore.collection('tmdb_metadata');
+        const dedupRef = firestore.collection('dedup_map')
+            .doc(`${file.crc32}-${file.size}`);
         const seriesRef = firestore.collection('accounts')
             .doc(ctx.params.accountId)
             .collection('series')
@@ -122,6 +157,11 @@ const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: func
         batch.set(metaCollection.doc(seriesFbId), bestMatch);
         batch.set(metaCollection.doc(seasonFbId), seasonData);
         batch.set(metaCollection.doc(episodeFbId), episodeData);
+        batch.set(dedupRef, {
+            reference: episodeFbId,
+            season_reference: seasonFbId,
+            series_reference: seriesFbId,
+        } as DedupeEntry);
         batch.set(seriesRef, { metadata: {} });
         batch.set(seasonRef, { metadata: {} });
         batch.set(epRef, file);
@@ -148,7 +188,7 @@ const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: func
             .doc(tmdbFirestoreId);
 
         batch.set(movieRef, file);
-        batch.set(dedupRef, { reference: tmdbFirestoreId });
+        batch.set(dedupRef, { reference: tmdbFirestoreId } as DedupeEntry);
         batch.set(metadataRef, bestMatch);
     }
 
