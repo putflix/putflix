@@ -30,6 +30,7 @@ export interface Item<M> {
 export interface Movie extends Item<MovieMetadata> {}
 
 export const enum QueueStatus {
+    Errored = 'errored',
     Processing = 'processing',
     Waiting = 'waiting'
 }
