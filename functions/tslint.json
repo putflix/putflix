@@ -13,7 +13,7 @@
     "no-namespace": true,
 
     // Do not allow parameters to be reassigned. To avoid bugs, developers should instead assign new values to new vars.
-    "no-parameter-reassignment": true,
+    "no-parameter-reassignment": false,
 
     // Force the use of ES6-style imports instead of /// <reference path=> imports.
     "no-reference": true,
@@ -43,7 +43,7 @@
 
     // Disallows a variable definition in an inner scope from shadowing a variable in an outer scope. Developers should
     // instead use a separate variable name.
-    "no-shadowed-variable": true,
+    "no-shadowed-variable": false,
 
     // Empty blocks are almost never needed. Allow the one general exception: empty catch blocks.
     "no-empty": false,
@@ -66,7 +66,7 @@
     "no-unsafe-finally": true,
 
     // Do not allow variables to be used before they are declared.
-    "no-use-before-declare": true,
+    "no-use-before-declare": false,
 
     // Expressions must always return a value. Avoids common errors like const myValue = functionReturningVoid();
     "no-void-expression": [true, "ignore-arrow-function-shorthand"],
@@ -84,7 +84,7 @@
     "no-empty-interface": {"severity": "warning"},
 
     // Warn when an import will have side effects.
-    "no-import-side-effect": {"severity": "warning"},
+    "no-import-side-effect": false,
 
     // Warn when variables are defined with var. Var has subtle meaning that can lead to bugs. Strongly prefer const for
     // most values and let for values that will change.
