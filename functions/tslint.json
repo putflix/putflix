@@ -119,7 +119,7 @@
     // Custom Rules
 
     "ordered-imports": true,
-    "trailing-comma": true,
+    "trailing-comma": true
   },
 
   "defaultSeverity": "error"
