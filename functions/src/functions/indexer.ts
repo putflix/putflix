@@ -76,6 +76,7 @@ const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: func
     if (!movies.length) {
         console.log(`Could not find ${queueSnap.id} / ${JSON.stringify(details)} on TMDb.`);
         await queueSnap.ref.delete();
+        return;
     }
 
     // We've got the info now, update Firestore
