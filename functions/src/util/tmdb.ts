@@ -1,5 +1,5 @@
 import * as functions from 'firebase-functions';
-import fetch from 'node-fetch';
+import fetch, { Request, RequestInit, Response } from 'node-fetch';
 import { Movie, Season, TvShow } from 'tmdb-typescript-api';
 import { URL } from 'url';
 
@@ -19,7 +19,7 @@ export async function getSeason(showId: number, seasonNumber: number): Promise<S
     const url = new URL(seasonDetailsBase + `/${showId}/season/${seasonNumber}`);
     url.searchParams.append('api_key', functions.config().tmdb.api_key);
 
-    const resp = await fetch(url.toString());
+    const resp = await requestWithRetry(url.toString());
     if (!resp.ok) {
         if (resp.status === 404) {
             return null;
@@ -52,7 +52,7 @@ async function doFetch<T>(url: string | URL): Promise<T | null> {
     }
     url.searchParams.append('api_key', functions.config().tmdb.api_key);
 
-    const resp = await fetch(url.toString());
+    const resp = await requestWithRetry(url.toString());
     if (!resp.ok) {
         if (resp.status === 404) {
             console.log(`Got 404 from ${url.toString()}.`);
@@ -62,4 +62,20 @@ async function doFetch<T>(url: string | URL): Promise<T | null> {
     }
 
     return (await resp.json()).results;
+}
+
+async function requestWithRetry(url: string | Request, init?: RequestInit): Promise<Response> {
+    for (let i = 0; i < 5; i++) {
+        const resp = await fetch(url, init);
+
+        if (resp.status === 429) {
+            const retryAfter = Number(resp.headers['Retry-After']) * 1000;
+            await (new Promise(res => setTimeout(res, retryAfter + (Math.random() * 10000))));
+            continue;
+        }
+
+        return resp;
+    }
+
+    throw new Error("Too many retries.");
 }
