@@ -15,9 +15,18 @@ const [movieSearch, tvSearch, seasonDetailsBase] = (() => {
     return [movieSearch, tvSearch, seasonDetails];
 })();
 
-export function getSeason(showId: number, seasonNumber: number): Promise<Season | null> {
-    const url = seasonDetailsBase + `/${showId}/season/${seasonNumber}`;
-    return doFetch<Season | null>(url);
+export async function getSeason(showId: number, seasonNumber: number): Promise<Season | null> {
+    const url = new URL(seasonDetailsBase + `/${showId}/season/${seasonNumber}`);
+    url.searchParams.append('api_key', functions.config().tmdb.api_key);
+
+    const resp = await fetch(url.toString());
+    if (!resp.ok) {
+        if (resp.status === 404) {
+            return null;
+        }
+        throw new Error(`Got invalid status code ${resp.status} from TMDb.`);
+    }
+    return await resp.json();
 }
 
 export function searchMovies(title: string, year?: number): Promise<Movie[]> {

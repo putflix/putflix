@@ -3,7 +3,7 @@ import * as functions from 'firebase-functions';
 import ptn from 'parse-torrent-name';
 
 import { firestore } from '../util/firestore';
-import { searchMovies } from '../util/tmdb';
+import { getSeason, searchMovies, searchShows } from '../util/tmdb';
 import { DedupeEntry, File, IndexingQueueEntry, QueueStatus } from '../util/types';
 
 const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: functions.EventContext) => {
@@ -38,7 +38,7 @@ const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: func
     const dedupRef = firestore.collection('dedup_map').doc(dedupId);
     const dedupSnap = await dedupRef.get()
 
-    if (dedupSnap.exists) {
+    if (dedupSnap.exists && false) { // disabled for now
         // We have seen this file already. Move it to the appropriate location
         // in the DB and remove the queue entry. We're done.
 
@@ -68,43 +68,89 @@ const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: func
     const details = ptn(file.filename);
     const isTvShow = details.season && details.episode;
 
-    if (isTvShow) {
-        throw new Error("We don't support TV Shows right now.");
-    }
-
-    const movies = await searchMovies(details.title, details.year);
-    if (!movies.length) {
-        console.log(`Could not find ${queueSnap.id} / ${JSON.stringify(details)} on TMDb.`);
-        await queueSnap.ref.delete();
-        return;
-    }
-
-    // We've got the info now, update Firestore
-
-    const bestMatch = movies[0];
-    const tmdbFirestoreId = `movies-${bestMatch.id}`;
-
-    console.log(`Got a match for TMDb ID ${bestMatch.id} (${bestMatch.title} / ${bestMatch.release_date}). Updating DB...`);
-
     const batch = firestore.batch();
-    batch.set(
-        firestore.collection('accounts')
-            .doc(ctx.params.accountId)
-            .collection('movies')
-            .doc(tmdbFirestoreId),
-        file,
-    );
-    batch.set(
-        dedupRef,
-        { reference: tmdbFirestoreId },
-    );
-    batch.set(
-        firestore.collection('tmdb_metadata').doc(tmdbFirestoreId),
-        bestMatch,
-    );
-
     batch.delete(fileSnap.ref);
     batch.delete(queueSnap.ref);
+
+    if (isTvShow) {
+        const shows = await searchShows(details.title);
+        if (!shows.length) {
+            console.log(`Could not find ${queueSnap.id} / ${JSON.stringify(details)} on TMDb.`);
+            await queueSnap.ref.delete();
+            return;
+        }
+
+        const bestMatch = shows[0];
+        const seriesFbId = `series-${bestMatch.id}`;
+
+        console.log(`Got a match for TMDb ID ${bestMatch.id} (${bestMatch.name} / ${bestMatch.first_air_date}). Querying season...`);
+
+        const season = await getSeason(bestMatch.id, details.season);
+        if (!season) {
+            console.log(`Could not find season ${details.season}.`);
+            await queueSnap.ref.delete();
+            return;
+        }
+
+        const seasonFbId = `seasons-${season.id}`;
+        // tslint:disable-next-line:no-unnecessary-type-assertion
+        const { episodes, ...seasonData } = season as any;
+        const episode = episodes.find(ep => ep.episode_number === details.episode);
+
+        if (!episode) {
+            console.log(`Could not find episode ${details.episode}.`);
+            await queueSnap.ref.delete();
+            return;
+        }
+
+        console.log(`Found season (${season.season_number}) & episode (${episode.episode_number}). Updating Firestore...`);
+
+        // tslint:disable-next-line:no-unnecessary-type-assertion
+        const { crew, guest_stars, ...episodeData } = episode as any;
+        const episodeFbId = `episodes-${episode.id}`;
+
+        const metaCollection = firestore.collection('tmdb_metadata');
+        const seriesRef = firestore.collection('accounts')
+            .doc(ctx.params.accountId)
+            .collection('series')
+            .doc(seriesFbId);
+        const seasonRef = seriesRef.collection('seasons')
+            .doc(seasonFbId);
+        const epRef = seasonRef.collection('episodes')
+            .doc(episodeFbId);
+
+        batch.set(metaCollection.doc(seriesFbId), bestMatch);
+        batch.set(metaCollection.doc(seasonFbId), seasonData);
+        batch.set(metaCollection.doc(episodeFbId), episodeData);
+        batch.set(seriesRef, { metadata: {} });
+        batch.set(seasonRef, { metadata: {} });
+        batch.set(epRef, file);
+    } else {
+        const movies = await searchMovies(details.title, details.year);
+        if (!movies.length) {
+            console.log(`Could not find ${queueSnap.id} / ${JSON.stringify(details)} on TMDb.`);
+            await queueSnap.ref.delete();
+            return;
+        }
+
+        // We've got the info now, update Firestore
+
+        const bestMatch = movies[0];
+        const tmdbFirestoreId = `movies-${bestMatch.id}`;
+
+        console.log(`Got a match for TMDb ID ${bestMatch.id} (${bestMatch.title} / ${bestMatch.release_date}). Updating DB...`);
+
+        const movieRef = firestore.collection('accounts')
+            .doc(ctx.params.accountId)
+            .collection('movies')
+            .doc(tmdbFirestoreId);
+        const metadataRef = firestore.collection('tmdb_metadata')
+            .doc(tmdbFirestoreId);
+
+        batch.set(movieRef, file);
+        batch.set(dedupRef, { reference: tmdbFirestoreId });
+        batch.set(metadataRef, bestMatch);
+    }
 
     await batch.commit();
 };
@@ -116,5 +162,6 @@ export const indexFiles = functions.runWith({ memory: '128MB', timeoutSeconds: 6
             await indexer(queueSnap, ctx);
         } catch (err) {
             await queueSnap.ref.update({ status: QueueStatus.Errored } as Partial<IndexingQueueEntry>);
+            throw err;
         }
     });
