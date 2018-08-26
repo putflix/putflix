@@ -25,7 +25,7 @@ export interface Item<M> {
     is_mp4_available: boolean;
     mime: string;
     metadata: M;
-    putio_id: string;
+    putio_id: number;
     size: number;
 }
 

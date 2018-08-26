@@ -4,3 +4,4 @@ import 'firebase-functions';
 firebase.initializeApp();
 
 export * from './functions/indexer';
+export * from './functions/putio-webhook';
