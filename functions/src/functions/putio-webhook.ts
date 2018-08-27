@@ -105,7 +105,7 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
 
     // Firestore batches can only process up to 500 items at a time, so we chunk
     // the list of files to be indexed and process them in separate batches.
-    const firestoreWrites = chunk(indexableFiles, 500)
+    const firestoreWrites = chunk(indexableFiles, 250) // Two batch entries per file
         .map(ch => {
             const batch = firestore.batch();
             const accountRef = firestore.collection('accounts').doc('');
