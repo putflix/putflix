@@ -82,7 +82,9 @@ async function* listDirectoryRecursive(dirId: number): AsyncIterable<PutIoFile> 
 export const putioWebhook = functions.https.onRequest(async (req, res) => {
     const data: PutIoTransfer = req.body;
 
-    const fileResp = await fetch(fileUrl + data.file_id);
+    // First collect the files to be indexed from the put.io API
+
+    const fileResp = await fetch(fileUrl + (req.body as PutIoTransfer).file_id);
     if (!fileResp.ok) {
         throw new Error("Got invalid response from put.io API.");
     }
@@ -91,6 +93,9 @@ export const putioWebhook = functions.https.onRequest(async (req, res) => {
     const files = (file.file_type === 'FOLDER')
         ? await collect(listDirectoryRecursive(file.id))
         : [file];
+
+    // And write them to Firestore...
+
     const indexableFiles = files.filter(f => f.file_type === 'VIDEO');
 
     // Firestore batches can only process up to 500 items at a time, so we chunk
