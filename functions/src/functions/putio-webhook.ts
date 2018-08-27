@@ -79,8 +79,13 @@ async function* listDirectoryRecursive(dirId: number): AsyncIterable<PutIoFile> 
     }
 }
 
-export const putioWebhook = functions.https.onRequest(async (req, res) => {
-    const data: PutIoTransfer = req.body;
+const webhook = async (req: functions.Request, res: functions.Response) => {
+    if (!req.query.account) {
+        return res.status(400).json({
+            success: false,
+            msg: "Missing 'account' query parameter.",
+        });
+    }
 
     // First collect the files to be indexed from the put.io API
 
@@ -128,5 +133,18 @@ export const putioWebhook = functions.https.onRequest(async (req, res) => {
         });
     await Promise.all(firestoreWrites);
 
-    res.json({ success: true });
+    return res.json({ success: true });
+};
+
+export const putioWebhook = functions.https.onRequest(async (req, res) => {
+    try {
+        await webhook(req, res);
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            msg: "Internal server error.",
+        });
+
+        throw err;
+    }
 });
