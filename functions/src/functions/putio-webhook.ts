@@ -1,5 +1,6 @@
 import * as firebase from 'firebase-admin';
 import * as functions from 'firebase-functions';
+import chunk from 'lodash/chunk';
 import fetch from 'node-fetch';
 
 import { firestore } from '../util/firestore';
@@ -92,26 +93,35 @@ export const putioWebhook = functions.https.onRequest(async (req, res) => {
         : [file];
     const indexableFiles = files.filter(f => f.file_type === 'VIDEO');
 
-    const batch = firestore.batch();
-    const accountRef = firestore.collection('accounts').doc('');
+    // Firestore batches can only process up to 500 items at a time, so we chunk
+    // the list of files to be indexed and process them in separate batches.
+    const firestoreWrites = chunk(indexableFiles, 500)
+        .map(ch => {
+            const batch = firestore.batch();
+            const accountRef = firestore.collection('accounts').doc('');
 
-    for (const file of indexableFiles) {
-        batch.set(accountRef.collection('files').doc(String(file.id)), {
-            created_at: firebase.firestore.Timestamp.fromDate(new Date(file.created_at)),
-            crc32: file.crc32,
-            filename: file.name,
-            is_mp4_available: file.is_mp4_available,
-            metadata: {},
-            mime: file.content_type,
-            putio_id: file.id,
-            size: file.size,
-        } as File);
-        batch.set(accountRef.collection('indexing_queue').doc(String(file.id)), {
-            last_changed: firebase.firestore.Timestamp.now(),
-            status: 'waiting',
-        } as IndexingQueueEntry);
-    }
+            for (const file of ch) {
+                const fileIdString = file.id.toString();
 
-    await batch.commit();
+                batch.set(accountRef.collection('files').doc(fileIdString), {
+                    created_at: firebase.firestore.Timestamp.fromDate(new Date(file.created_at)),
+                    crc32: file.crc32,
+                    filename: file.name,
+                    is_mp4_available: file.is_mp4_available,
+                    metadata: {},
+                    mime: file.content_type,
+                    putio_id: file.id,
+                    size: file.size,
+                } as File);
+                batch.set(accountRef.collection('indexing_queue').doc(fileIdString), {
+                    last_changed: firebase.firestore.Timestamp.now(),
+                    status: 'waiting',
+                } as IndexingQueueEntry);
+            }
+
+            return batch.commit();
+        });
+    await Promise.all(firestoreWrites);
+
     res.json({ success: true });
 });
