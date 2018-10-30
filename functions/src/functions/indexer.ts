@@ -76,12 +76,10 @@ const indexer = async (
 
     console.log("This file is not known yet. Adding it to the TMDb queue...");
 
-    await firestore
-        .collection('tmdb_queue')
-        .add({
-            account_id: ctx.params.accountId,
-            file,
-        } as TmdbQueueEntry);
+    await db.tmdbQueue.add({
+        account_id: ctx.params.accountId,
+        file,
+    } as TmdbQueueEntry);
 };
 
 export const indexFiles = functions.runWith({ memory: '128MB', timeoutSeconds: 60 }).firestore
