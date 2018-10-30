@@ -6,15 +6,24 @@ export type SeriesMetadata = MovieMetadata;
 export type SeasonMetadata = SeriesMetadata;
 
 export interface DedupeEntry {
-    reference: string;
-    season_reference?: string;
-    series_reference?: string;
+    reference: number;
+    season_reference?: number;
+    series_reference?: number;
     type: MediaType;
 }
 
 export interface IndexingQueueEntry {
     last_changed: firebase.firestore.Timestamp;
     status: QueueStatus;
+}
+
+export interface SchedulerMeta {
+    key: string;
+}
+
+export interface TmdbQueueEntry {
+    account_id: string;
+    file: UncategorizedFile;
 }
 
 export interface Item<M> {

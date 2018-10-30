@@ -4,7 +4,7 @@ import parseTorrentName from 'parse-torrent-name';
 
 import { firestore, db } from '../util/firestore';
 import { getSeason, searchMovies, searchShows } from '../util/tmdb';
-import { DedupeEntry, IndexingQueueEntry, QueueStatus, UncategorizedFile, MediaType } from '../util/types';
+import { DedupeEntry, IndexingQueueEntry, QueueStatus, UncategorizedFile, MediaType, TmdbQueueEntry } from '../util/types';
 
 const indexer = async (
     queueSnap: firebase.firestore.DocumentSnapshot,
@@ -73,111 +73,14 @@ const indexer = async (
         return batch.commit();
     }
 
-    console.log("This file is not known yet. Parsing filename & querying TMDb...");
+    console.log("This file is not known yet. Adding it to the TMDb queue...");
 
-    // We have not seen this file yet. Parse info from the file name and query TMDb.
-
-    const details = parseTorrentName(file.filename);
-    const isTvShow = details.season && details.episode;
-
-    const batch = firestore.batch();
-    batch.delete(fileSnap.ref);
-    batch.delete(queueSnap.ref);
-
-    if (isTvShow) {
-        const shows = await searchShows(details.title);
-        if (!shows.length) {
-            console.log(`Could not find ${queueSnap.id} / ${JSON.stringify(details)} on TMDb.`);
-            await queueSnap.ref.delete();
-            return;
-        }
-
-        // We know the TV show, but still lack season / episode info
-
-        const bestMatch = shows[0];
-        const seriesFbId = `series-${bestMatch.id}`;
-
-        console.log(`Got a match for TMDb ID ${bestMatch.id} (${bestMatch.name} / ${bestMatch.first_air_date}). Querying season...`);
-
-        const season = await getSeason(bestMatch.id, details.season);
-        if (!season) {
-            console.log(`Could not find season ${details.season}.`);
-            await queueSnap.ref.delete();
-            return;
-        }
-
-        // Got the season now, now try to find the appropriate episode
-
-        const seasonFbId = `seasons-${season.id}`;
-        // tslint:disable-next-line:no-unnecessary-type-assertion
-        const { episodes, ...seasonData } = season as any;
-        const episode = episodes.find(ep => ep.episode_number === details.episode);
-
-        if (!episode) {
-            console.log(`Could not find episode ${details.episode}.`);
-            await queueSnap.ref.delete();
-            return;
-        }
-
-        // Got all the info now, update Firestore...
-
-        console.log(`Found season (${season.season_number}) & episode (${episode.episode_number}). Updating Firestore...`);
-
-        // tslint:disable-next-line:no-unnecessary-type-assertion
-        const { crew, guest_stars, ...episodeData } = episode as any;
-        const episodeFbId = `episodes-${episode.id}`;
-
-        const metaCollection = firestore.collection('tmdb_metadata');
-        const dedupRef = firestore.collection('dedup_map')
-            .doc(`${file.crc32}-${file.size}`);
-        const seriesRef = firestore.collection('accounts')
-            .doc(ctx.params.accountId)
-            .collection('series')
-            .doc(seriesFbId);
-        const seasonRef = seriesRef.collection('seasons')
-            .doc(seasonFbId);
-        const epRef = seasonRef.collection('episodes')
-            .doc(episodeFbId);
-
-        batch.set(metaCollection.doc(seriesFbId), bestMatch);
-        batch.set(metaCollection.doc(seasonFbId), seasonData);
-        batch.set(metaCollection.doc(episodeFbId), episodeData);
-        batch.set(dedupRef, {
-            reference: episodeFbId,
-            season_reference: seasonFbId,
-            series_reference: seriesFbId,
-        } as DedupeEntry);
-        batch.set(seriesRef, { metadata: {} });
-        batch.set(seasonRef, { metadata: {} });
-        batch.set(epRef, file);
-    } else {
-        const movies = await searchMovies(details.title, details.year);
-        if (!movies.length) {
-            console.log(`Could not find ${queueSnap.id} / ${JSON.stringify(details)} on TMDb.`);
-            await queueSnap.ref.delete();
-            return;
-        }
-
-        // We've got the info now, update Firestore
-
-        const bestMatch = movies[0];
-        const tmdbFirestoreId = `movies-${bestMatch.id}`;
-
-        console.log(`Got a match for TMDb ID ${bestMatch.id} (${bestMatch.title} / ${bestMatch.release_date}). Updating DB...`);
-
-        const movieRef = firestore.collection('accounts')
-            .doc(ctx.params.accountId)
-            .collection('movies')
-            .doc(tmdbFirestoreId);
-        const metadataRef = firestore.collection('tmdb_metadata')
-            .doc(tmdbFirestoreId);
-
-        batch.set(movieRef, file);
-        batch.set(dedupRef, { reference: tmdbFirestoreId } as DedupeEntry);
-        batch.set(metadataRef, bestMatch);
-    }
-
-    await batch.commit();
+    await firestore
+        .collection('tmdb_queue')
+        .add({
+            account_id: ctx.params.accountId,
+            file,
+        } as TmdbQueueEntry);
 };
 
 export const indexFiles = functions.runWith({ memory: '128MB', timeoutSeconds: 60 }).firestore
