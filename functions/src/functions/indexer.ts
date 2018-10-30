@@ -85,9 +85,7 @@ const indexer = async (
         batch.delete(queueSnap.ref);
         batch.delete(fileSnap.ref);
 
-        await batch.commit();
-
-        return;
+        return batch.commit();
     }
 
     console.log("This file is not known yet. Parsing filename & querying TMDb...");
