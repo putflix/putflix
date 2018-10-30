@@ -6,7 +6,10 @@ import { firestore } from '../util/firestore';
 import { getSeason, searchMovies, searchShows } from '../util/tmdb';
 import { DedupeEntry, IndexingQueueEntry, QueueStatus, UncategorizedFile } from '../util/types';
 
-const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: functions.EventContext) => {
+const indexer = async (
+    queueSnap: firebase.firestore.DocumentSnapshot,
+    ctx: functions.EventContext,
+) => {
     console.log(`Processing put.io ID ${queueSnap.id}...`);
 
     const queueEntryUpdate = queueSnap.ref.update({
