@@ -4,7 +4,7 @@ import parseTorrentName from 'parse-torrent-name';
 
 import { firestore } from '../util/firestore';
 import { getSeason, searchMovies, searchShows } from '../util/tmdb';
-import { DedupeEntry, IndexingQueueEntry, QueueStatus, UncategorizedFile } from '../util/types';
+import { DedupeEntry, IndexingQueueEntry, QueueStatus, UncategorizedFile, MediaType } from '../util/types';
 
 const indexer = async (
     queueSnap: firebase.firestore.DocumentSnapshot,
@@ -45,14 +45,13 @@ const indexer = async (
         // We have seen this file already. Move it to the appropriate location
         // in the DB and remove the queue entry. We're done.
 
-        const { reference, season_reference, series_reference } = dedupSnap.data() as DedupeEntry;
+        const { type, reference, season_reference, series_reference } = dedupSnap.data() as DedupeEntry;
         console.log(`Association ${dedupId} -> ${reference} found.`);
-        const [type] = reference.split('-', 2);
 
         const batch = firestore.batch();
 
         switch (type) {
-            case 'episodes':
+            case MediaType.Episode:
                 if (!season_reference || !series_reference) {
                     throw new Error("Found an episode reference but missing season and series reference.");
                 }
@@ -70,7 +69,7 @@ const indexer = async (
                 batch.set(seasonRef, { metadata: {} });
                 batch.set(epRef, file);
                 break;
-            case 'movies':
+            case MediaType.Movie:
                 batch.set(
                     firestore.collection('accounts')
                         .doc(ctx.params.accountId)
