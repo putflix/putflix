@@ -95,12 +95,25 @@ async function* listDirectoryRecursive(dirId: number): AsyncIterable<PutIoFile> 
     }
 }
 
+interface HTTPError {
+    code: number
+}
+
+class BadRequestError extends Error implements HTTPError {
+    get code() {
+        return 400;
+    }
+}
+
+class InternalServerError extends Error implements HTTPError {
+    get code() {
+        return 500;
+    }
+}
+
 const webhook = async (req: functions.Request, res: functions.Response) => {
     if (!req.query.account) {
-        return res.status(400).json({
-            success: false,
-            msg: "Missing 'account' query parameter.",
-        });
+        throw new BadRequestError("Missing 'account' query parameter.")
     }
 
     // First collect the files to be indexed from the put.io API
@@ -151,18 +164,20 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
             return batch.commit();
         });
     await Promise.all(firestoreWrites);
-
-    return res.json({ success: true });
 };
 
 export const putioWebhook = functions.https.onRequest(async (req, res) => {
     try {
         await webhook(req, res);
+        res.json({ success: true });
     } catch (err) {
-        res.status(500).json({
-            success: false,
-            msg: "Internal server error.",
-        });
+        let code = 500;
+        let msg = "Internal server error.";
+        if ('code' in err) {
+            code = err.code;
+            msg = err.message;
+        }
+        res.status(code).json({ success: false, msg });
 
         throw err;
     }
