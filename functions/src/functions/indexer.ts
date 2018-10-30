@@ -88,7 +88,10 @@ export const indexFiles = functions.runWith({ memory: '128MB', timeoutSeconds: 6
         try {
             await indexer(queueSnap, ctx);
         } catch (err) {
-            await queueSnap.ref.update({ status: QueueStatus.Errored } as Partial<IndexingQueueEntry>);
+            await queueSnap.ref.update({
+                last_changed: firebase.firestore.Timestamp.now(),
+                status: QueueStatus.Errored
+            } as Partial<IndexingQueueEntry>);
             throw err;
         }
     });
