@@ -4,7 +4,7 @@ import parseTorrentName from 'parse-torrent-name';
 
 import { db, firestore } from '../util/firestore';
 import { getSeason, searchMovies, searchShows, TooManyRequestsError } from '../util/tmdb';
-import { DedupeEntry, MediaType, SchedulerMeta, TmdbQueueEntry } from '../util/types';
+import { DedupeEntry, MediaType, QueueStatus, SchedulerMeta, TmdbQueueEntry } from '../util/types';
 
 const fetch = async ({account_id, file, key}: TmdbQueueEntry & SchedulerMeta) => {
     // We have not seen this file yet. Parse info from the file name and query TMDb.
@@ -12,6 +12,11 @@ const fetch = async ({account_id, file, key}: TmdbQueueEntry & SchedulerMeta) =>
     const isTvShow = details.season && details.episode;
 
     const dedupRef = db.dedupMapping(`${file.crc32}-${file.size}`);
+
+    await db.user(account_id).indexingQueueEntry(String(file.putio_id)).update({
+        last_changed: firebase.firestore.Timestamp.now(),
+        status: QueueStatus.FetchingMetadata,
+    });
 
     const batch = firestore.batch();
 
@@ -76,9 +81,9 @@ const fetch = async ({account_id, file, key}: TmdbQueueEntry & SchedulerMeta) =>
      * After the batch, so we can be sure that
      * the new metadata has already been persisted.
      */
-    await db.user(account_id).indexingQueueEntry(String(file.putio_id)).set({
+    await db.user(account_id).indexingQueueEntry(String(file.putio_id)).update({
         last_changed: firebase.firestore.Timestamp.now(),
-        status: 'waiting',
+        status: QueueStatus.Waiting,
     });
 };
 

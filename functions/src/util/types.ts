@@ -49,7 +49,8 @@ export interface Movie extends Item<MovieMetadata> {}
 export const enum QueueStatus {
     Errored = 'errored',
     Processing = 'processing',
-    Waiting = 'waiting'
+    Waiting = 'waiting',
+    FetchingMetadata = 'fetching_metadata',
 }
 
 export interface Series {
