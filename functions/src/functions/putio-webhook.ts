@@ -16,7 +16,10 @@ import {
 import { File, IndexingQueueEntry } from '../util/types';
 
 async function* listDirectoryRecursive(dirId: number): AsyncIterable<PutIoFile> {
-    const { files }: { files: PutIoFile[] } = await request(fileListUrl(dirId), { json: true });
+    const { files }: { files: PutIoFile[] } = await request(
+        fileListUrl(dirId),
+        { json: true },
+    );
 
     for (const f of files) {
         if (f.file_type === PutIoFileType.Folder) {
@@ -56,7 +59,10 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
 
     // First collect the files to be indexed from the put.io API
 
-    const { file }: { file: PutIoFile } = await request(fileUrl(payload.file_id), { json: true });
+    const { file }: { file: PutIoFile } = await request(
+        fileUrl(payload.file_id),
+        { json: true },
+    );
     const files = (file.file_type === PutIoFileType.Folder)
         ? await collect(listDirectoryRecursive(file.id))
         : [file];
