@@ -13,7 +13,7 @@ import {
     PutIoTransfer,
     TransferStatus,
 } from '../util/putio';
-import { File, IndexingQueueEntry } from '../util/types';
+import { IndexingQueueEntry, UncategorizedFile } from '../util/types';
 
 async function* listDirectoryRecursive(dirId: number): AsyncIterable<PutIoFile> {
     const { files }: { files: PutIoFile[] } = await request(
@@ -90,7 +90,7 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
                     mime: file.content_type,
                     putio_id: file.id,
                     size: file.size,
-                } as File);
+                } as UncategorizedFile);
                 batch.set(accountRef.collection('indexing_queue').doc(fileIdString), {
                     last_changed: firebase.firestore.Timestamp.now(),
                     status: 'waiting',

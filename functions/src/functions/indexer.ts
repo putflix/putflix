@@ -4,7 +4,7 @@ import ptn from 'parse-torrent-name';
 
 import { firestore } from '../util/firestore';
 import { getSeason, searchMovies, searchShows } from '../util/tmdb';
-import { DedupeEntry, File, IndexingQueueEntry, QueueStatus } from '../util/types';
+import { DedupeEntry, IndexingQueueEntry, QueueStatus, UncategorizedFile } from '../util/types';
 
 const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: functions.EventContext) => {
     console.log(`Processing put.io ID ${queueSnap.id}...`);
@@ -30,7 +30,7 @@ const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: func
         return;
     }
 
-    const file = fileSnap.data() as File;
+    const file = fileSnap.data() as UncategorizedFile;
 
     // Check if we have seen this file already
 

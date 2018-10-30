@@ -9,9 +9,8 @@ export interface DedupeEntry {
     reference: string;
     season_reference?: string;
     series_reference?: string;
+    type: MediaType;
 }
-
-export interface File extends Item<FileMetadata> {}
 
 export interface IndexingQueueEntry {
     last_changed: firebase.firestore.Timestamp;
@@ -29,6 +28,13 @@ export interface Item<M> {
     size: number;
 }
 
+export const enum MediaType {
+    Episode = "episode",
+    Movie = "movie",
+    Season = "season",
+    Series = "series",
+}
+
 export interface Movie extends Item<MovieMetadata> {}
 
 export const enum QueueStatus {
@@ -44,3 +50,5 @@ export interface Series {
 export interface Season {
     metadata: SeasonMetadata;
 }
+
+export interface UncategorizedFile extends Item<FileMetadata> {}
