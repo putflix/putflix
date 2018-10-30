@@ -3,6 +3,7 @@ import * as functions from 'firebase-functions';
 import chunk from 'lodash/chunk';
 import request from 'request-promise-native';
 
+import { BadRequestError } from '../util/errors';
 import { db, firestore } from '../util/firestore';
 import {
     authenticatedApi,
@@ -38,22 +39,6 @@ async function listDirectoryRecursive(api: ReturnType<typeof authenticatedApi>, 
     videoFiles.concat(...await Promise.all(folderQueue));
 
     return videoFiles;
-}
-
-interface HTTPError {
-    code: number
-}
-
-class BadRequestError extends Error implements HTTPError {
-    get code() {
-        return 400;
-    }
-}
-
-class InternalServerError extends Error implements HTTPError {
-    get code() {
-        return 500;
-    }
 }
 
 const webhook = async (req: functions.Request, res: functions.Response) => {

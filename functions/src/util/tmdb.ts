@@ -5,6 +5,7 @@ import {StatusCodeError} from 'request-promise-native/errors';
 
 import { Movie, Season, TvShow } from 'tmdb-typescript-api';
 import { URL } from 'url';
+import { TooManyRequestsError } from './errors';
 
 const [movieSearch, tvSearch, seasonDetailsBase] = (() => {
     const baseUrl = 'https://api.themoviedb.org/3';
@@ -17,23 +18,6 @@ const [movieSearch, tvSearch, seasonDetailsBase] = (() => {
 
     return [movieSearch, tvSearch, seasonDetails];
 })();
-
-export class TooManyRequestsError extends Error {
-    private _retryAfter;
-
-    get code() {
-        return 429;
-    }
-
-    get retryAfter() {
-        return this._retryAfter
-    }
-
-    constructor(retryAfter: number) {
-        super('Too many requests');
-        this._retryAfter = retryAfter;
-    }
-}
 
 export async function getSeason(showId: number, seasonNumber: number): Promise<Season | null> {
     const url = new URL(seasonDetailsBase + `/${showId}/season/${seasonNumber}`);
