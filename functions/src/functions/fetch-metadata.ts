@@ -4,9 +4,9 @@ import parseTorrentName from 'parse-torrent-name';
 
 import { db, firestore } from '../util/firestore';
 import { getSeason, searchMovies, searchShows, TooManyRequestsError } from '../util/tmdb';
-import { DedupeEntry, MediaType, QueueStatus, SchedulerMeta, TmdbQueueEntry } from '../util/types';
+import { DedupeEntry, MediaType, QueueStatus, TmdbQueueEntry, TmdbQueuePayload } from '../util/types';
 
-const fetch = async ({account_id, file, key}: TmdbQueueEntry & SchedulerMeta) => {
+const fetch = async ({account_id, file}: TmdbQueuePayload) => {
     // We have not seen this file yet. Parse info from the file name and query TMDb.
     const details = parseTorrentName(file.filename);
     const isTvShow = details.season && details.episode;
@@ -28,7 +28,7 @@ const fetch = async ({account_id, file, key}: TmdbQueueEntry & SchedulerMeta) =>
     if (isTvShow) {
         const [seriesData] = await searchShows(details.title);
         if (!seriesData) {
-            console.log(`Could not find ${key} / ${JSON.stringify(details)} on TMDb.`);
+            console.log(`Could not find ${JSON.stringify(details)} on TMDb.`);
             return;
         }
 
@@ -69,7 +69,7 @@ const fetch = async ({account_id, file, key}: TmdbQueueEntry & SchedulerMeta) =>
     } else {
         const [movie] = await searchMovies(details.title, details.year);
         if (!movie) {
-            console.log(`Could not find ${key} / ${JSON.stringify(details)} on TMDb.`);
+            console.log(`Could not find ${JSON.stringify(details)} on TMDb.`);
             return;
         }
 
@@ -88,7 +88,7 @@ export const fetchMetadata = functions.https.onRequest(async (req, res) => {
         await fetch(req.body);
         res.status(204).send();
 
-        const {account_id, file} = req.body as TmdbQueueEntry;
+        const {account_id, file} = req.body as TmdbQueuePayload;
         await db.user(account_id).indexingQueueEntry(String(file.putio_id)).update({
             last_changed: firebase.firestore.Timestamp.now(),
             status: QueueStatus.Waiting,
@@ -110,3 +110,5 @@ export const fetchMetadata = functions.https.onRequest(async (req, res) => {
         throw err;
     }
 });
+
+export default fetchMetadata;

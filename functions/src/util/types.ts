@@ -21,7 +21,7 @@ export interface SchedulerMeta {
     key: string;
 }
 
-export interface TmdbQueueEntry {
+export interface TmdbQueuePayload {
     account_id: string;
     file: UncategorizedFile;
 }
