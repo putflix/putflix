@@ -3,7 +3,7 @@ import * as functions from 'firebase-functions';
 import chunk from 'lodash/chunk';
 import request from 'request-promise-native';
 
-import { firestore } from '../util/firestore';
+import { firestore, db } from '../util/firestore';
 import { collect } from '../util/iteration';
 import {
     fileListUrl,
@@ -76,12 +76,12 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
     const firestoreWrites = chunk(indexableFiles, 250) // Two batch entries per file
         .map(ch => {
             const batch = firestore.batch();
-            const accountRef = firestore.collection('accounts').doc(req.query.account);
+            const user = db.user(req.query.account);
 
             for (const file of ch) {
                 const fileIdString = file.id.toString();
 
-                batch.set(accountRef.collection('files').doc(fileIdString), {
+                batch.set(user.uncategorizedFile(fileIdString), {
                     created_at: firebase.firestore.Timestamp.fromDate(new Date(file.created_at)),
                     crc32: file.crc32,
                     filename: file.name,
@@ -91,7 +91,7 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
                     putio_id: file.id,
                     size: file.size,
                 } as UncategorizedFile);
-                batch.set(accountRef.collection('indexing_queue').doc(fileIdString), {
+                batch.set(user.indexingQueueEntry(fileIdString), {
                     last_changed: firebase.firestore.Timestamp.now(),
                     status: 'waiting',
                 } as IndexingQueueEntry);

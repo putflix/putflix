@@ -2,7 +2,7 @@ import * as firebase from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import parseTorrentName from 'parse-torrent-name';
 
-import { firestore } from '../util/firestore';
+import { firestore, db } from '../util/firestore';
 import { getSeason, searchMovies, searchShows } from '../util/tmdb';
 import { DedupeEntry, IndexingQueueEntry, QueueStatus, UncategorizedFile, MediaType } from '../util/types';
 
@@ -16,10 +16,9 @@ const indexer = async (
         last_changed: firebase.firestore.Timestamp.now(),
         status: QueueStatus.Processing,
     } as IndexingQueueEntry);
-    const fileSnapPromise = firestore.collection('accounts')
-        .doc(ctx.params.accountId)
-        .collection('files')
-        .doc(queueSnap.id)
+    const fileSnapPromise = db
+        .user(ctx.params.accountId)
+        .uncategorizedFile(queueSnap.id)
         .get();
 
     const [fileSnap] = await Promise.all([
@@ -38,7 +37,7 @@ const indexer = async (
     // Check if we have seen this file already
 
     const dedupId = `${file.crc32}-${file.size}`;
-    const dedupRef = firestore.collection('dedup_map').doc(dedupId);
+    const dedupRef = db.dedupMapping(dedupId);
     const dedupSnap = await dedupRef.get()
 
     if (dedupSnap.exists) {
@@ -49,6 +48,7 @@ const indexer = async (
         console.log(`Association ${dedupId} -> ${reference} found.`);
 
         const batch = firestore.batch();
+        const user = db.user(ctx.params.accountId);
 
         switch (type) {
             case MediaType.Episode:
@@ -56,27 +56,12 @@ const indexer = async (
                     throw new Error("Found an episode reference but missing season and series reference.");
                 }
 
-                const seriesRef = firestore.collection('accounts')
-                    .doc(ctx.params.accountId)
-                    .collection('series')
-                    .doc(series_reference);
-                const seasonRef = seriesRef.collection('seasons')
-                    .doc(season_reference);
-                const epRef = seasonRef.collection('episodes')
-                    .doc(reference);
-
-                batch.set(seriesRef, { metadata: {} });
-                batch.set(seasonRef, { metadata: {} });
-                batch.set(epRef, file);
+                batch.set(user.series(series_reference), { metadata: {} });
+                batch.set(user.season(season_reference), { metadata: {} });
+                batch.set(user.episode(reference), file);
                 break;
             case MediaType.Movie:
-                batch.set(
-                    firestore.collection('accounts')
-                        .doc(ctx.params.accountId)
-                        .collection(type)
-                        .doc(reference),
-                    file,
-                );
+                batch.set(user.movie(reference), file);
                 break;
             default:
                 throw new Error(`Unknown reference type '${type}'.`);
