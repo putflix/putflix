@@ -116,9 +116,15 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
         throw new BadRequestError("Missing 'account' query parameter.")
     }
 
+    const payload = req.body as PutIoTransfer;
+
+    if (payload.status !== TransferStatus.Completed) {
+        return;
+    }
+
     // First collect the files to be indexed from the put.io API
 
-    const fileResp = await fetch(fileUrl + (req.body as PutIoTransfer).file_id);
+    const fileResp = await fetch(fileUrl + payload.file_id);
     if (!fileResp.ok) {
         throw new Error(
             `Got invalid response code from put.io API: ${fileResp.status}\n`+
