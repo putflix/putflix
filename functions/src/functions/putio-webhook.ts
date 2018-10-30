@@ -5,7 +5,6 @@ import fetch from 'node-fetch';
 
 import { firestore } from '../util/firestore';
 import { collect } from '../util/iteration';
-import { File, IndexingQueueEntry } from '../util/types';
 import {
     fileListUrl,
     fileUrl,
@@ -14,7 +13,7 @@ import {
     PutIoTransfer,
     TransferStatus,
 } from '../util/putio';
-
+import { File, IndexingQueueEntry } from '../util/types';
 
 async function* listDirectoryRecursive(dirId: number): AsyncIterable<PutIoFile> {
     const listResp = await fetch(fileListUrl(dirId));
