@@ -82,13 +82,30 @@ const indexer = async (
     } as TmdbQueueEntry);
 };
 
-export const indexFiles = functions.runWith({ memory: '128MB', timeoutSeconds: 60 }).firestore
-    .document('/accounts/{accountId}/indexing_queue/{putioId}')
+const indexerFuncRef = functions.firestore.document('/accounts/{accountId}/indexing_queue/{putioId}')
+
+export const indexFileCreate = indexerFuncRef
     .onCreate(async (queueSnap, ctx) => {
         try {
             await indexer(queueSnap, ctx);
         } catch (err) {
             await queueSnap.ref.update({
+                last_changed: firebase.firestore.Timestamp.now(),
+                status: QueueStatus.Errored
+            } as Partial<IndexingQueueEntry>);
+            throw err;
+        }
+    });
+export const indexFileUpdate = indexerFuncRef
+    .onUpdate(async (queueSnap, ctx) => {
+        try {
+            if (queueSnap.after.data().status === queueSnap.before.data().status ||
+                queueSnap.after.data().status !== QueueStatus.Waiting) {
+                return;
+            }
+            await indexer(queueSnap.after, ctx);
+        } catch (err) {
+            await queueSnap.after.ref.update({
                 last_changed: firebase.firestore.Timestamp.now(),
                 status: QueueStatus.Errored
             } as Partial<IndexingQueueEntry>);
