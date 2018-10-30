@@ -9,12 +9,19 @@ import { File, IndexingQueueEntry } from '../util/types';
 
 type FakeBool = 'True' | 'False';
 
+enum PutIoFileType {
+    Folder = 'FOLDER',
+    Text = 'TEXT',
+    Video = 'VIDEO',
+    Image = 'IMAGE',
+}
+
 interface PutIoFile {
     content_type: string;
     crc32: string | null;
     created_at: string;
     extension: string | null;
-    file_type: 'FOLDER' | 'TEXT' | 'VIDEO' | 'IMAGE';
+    file_type: PutIoFileType;
     first_accessed_at: string | null;
     folder_type: 'REGULAR';
     icon: string;
@@ -27,6 +34,12 @@ interface PutIoFile {
     parent_id: number;
     screenshot: string | null;
     size: number;
+}
+
+enum TransferStatus {
+    Completed = 'COMPLETED',
+    Downloading = 'DOWNLOADING',
+    InQueue = 'IN_QUEUE',
 }
 
 interface PutIoTransfer {
@@ -52,7 +65,7 @@ interface PutIoTransfer {
     simulated: FakeBool;
     size: number;
     source: string;
-    status: 'COMPLETED' | 'DOWNLOADING' | 'IN_QUEUE';
+    status: TransferStatus;
     status_message: string;
     torrent_link: string;
     type: string;
@@ -74,7 +87,7 @@ async function* listDirectoryRecursive(dirId: number): AsyncIterable<PutIoFile> 
 
     const { files }: { files: PutIoFile[] } = await listResp.json();
     for (const f of files) {
-        if (f.file_type === 'FOLDER') {
+        if (f.file_type === PutIoFileType.Folder) {
             yield* listDirectoryRecursive(f.id);
         } else {
             yield f;
@@ -101,13 +114,13 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
     }
     const { file }: { file: PutIoFile } = await fileResp.json();
 
-    const files = (file.file_type === 'FOLDER')
+    const files = (file.file_type === PutIoFileType.Folder)
         ? await collect(listDirectoryRecursive(file.id))
         : [file];
 
     // And write them to Firestore...
 
-    const indexableFiles = files.filter(f => f.file_type === 'VIDEO');
+    const indexableFiles = files.filter(f => f.file_type === PutIoFileType.Video);
 
     // Firestore batches can only process up to 500 items at a time, so we chunk
     // the list of files to be indexed and process them in separate batches.
