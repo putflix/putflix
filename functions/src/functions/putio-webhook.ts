@@ -76,7 +76,7 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
     const firestoreWrites = chunk(indexableFiles, 250) // Two batch entries per file
         .map(ch => {
             const batch = firestore.batch();
-            const accountRef = firestore.collection('accounts').doc('');
+            const accountRef = firestore.collection('accounts').doc(req.query.account);
 
             for (const file of ch) {
                 const fileIdString = file.id.toString();
