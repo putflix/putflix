@@ -4,10 +4,8 @@ import chunk from 'lodash/chunk';
 import request from 'request-promise-native';
 
 import { db, firestore } from '../util/firestore';
-import { collect } from '../util/iteration';
 import {
-    fileListUrl,
-    fileUrl,
+    authenticatedApi,
     PutIoFile,
     PutIoFileType,
     PutIoTransfer,
@@ -15,19 +13,31 @@ import {
 } from '../util/putio';
 import { IndexingQueueEntry, UncategorizedFile } from '../util/types';
 
-async function* listDirectoryRecursive(dirId: number): AsyncIterable<PutIoFile> {
+interface WebhookQuery {
+    uid?: string;
+    token?: string;
+}
+
+async function listDirectoryRecursive(api: ReturnType<typeof authenticatedApi>, dirId: number): Promise<PutIoFile[]> {
+    const folderQueue = [];
+    const videoFiles = [];
+
     const { files }: { files: PutIoFile[] } = await request(
-        fileListUrl(dirId),
+        api.fileListUrl(dirId),
         { json: true },
     );
 
-    for (const f of files) {
+    for(const f of files) {
         if (f.file_type === PutIoFileType.Folder) {
-            yield* listDirectoryRecursive(f.id);
-        } else {
-            yield f;
+            folderQueue.push(listDirectoryRecursive(api, f.id));
+        } else if(f.file_type === PutIoFileType.Video) {
+            videoFiles.push(f);
         }
     }
+
+    videoFiles.concat(...await Promise.all(folderQueue));
+
+    return videoFiles;
 }
 
 interface HTTPError {
@@ -47,8 +57,10 @@ class InternalServerError extends Error implements HTTPError {
 }
 
 const webhook = async (req: functions.Request, res: functions.Response) => {
-    if (!req.query.account) {
-        throw new BadRequestError("Missing 'account' query parameter.")
+    const query = req.query as WebhookQuery;
+
+    if (!query.uid || !query.token) {
+        throw new BadRequestError("Missing query parameters.")
     }
 
     const payload = req.body as PutIoTransfer;
@@ -57,29 +69,28 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
         return;
     }
 
+    const api = authenticatedApi(query.token);
+
     // First collect the files to be indexed from the put.io API
 
     const { file }: { file: PutIoFile } = await request(
-        fileUrl(payload.file_id),
+        api.fileUrl(payload.file_id),
         { json: true },
     );
     const files = (file.file_type === PutIoFileType.Folder)
-        ? await collect(listDirectoryRecursive(file.id))
+        ? await listDirectoryRecursive(api, file.id)
         : [file];
 
     // And write them to Firestore...
-
-    const indexableFiles = files.filter(f => f.file_type === PutIoFileType.Video);
-
     // Firestore batches can only process up to 500 items at a time, so we chunk
     // the list of files to be indexed and process them in separate batches.
-    const firestoreWrites = chunk(indexableFiles, 250) // Two batch entries per file
+    const firestoreWrites = chunk(files, 250) // Two batch entries per file
         .map(ch => {
             const batch = firestore.batch();
-            const user = db.user(req.query.account);
+            const user = db.user(query.uid);
 
             for (const file of ch) {
-                const fileIdString = file.id.toString();
+                const fileIdString = String(file.id);
 
                 batch.set(user.uncategorizedFile(fileIdString), {
                     created_at: firebase.firestore.Timestamp.fromDate(new Date(file.created_at)),

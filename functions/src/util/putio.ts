@@ -64,5 +64,7 @@ export interface PutIoTransfer {
     up_speed: number;
 }
 
-export const fileUrl = (fileId: number) => `https://api.put.io/v2/files/${fileId}`;
-export const fileListUrl = (parentId: number) => `https://api.put.io/v2/files/?parent_id=${parentId}`;
+export const authenticatedApi = (token: string) => ({
+    fileUrl: (fileId: number) => `https://api.put.io/v2/files/${fileId}?oauth_token=${token}`,
+    fileListUrl: (parentId: number) => `https://api.put.io/v2/files/list?parent_id=${parentId}&oauth_token=${token}`,
+})
