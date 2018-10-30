@@ -13,6 +13,11 @@ const fetch = async ({account_id, file, key}: TmdbQueueEntry & SchedulerMeta) =>
 
     const dedupRef = db.dedupMapping(`${file.crc32}-${file.size}`);
 
+    // If we've already fetched metadata for this before, do nothing
+    if ((await dedupRef.get()).exists) {
+        return;
+    }
+
     await db.user(account_id).indexingQueueEntry(String(file.putio_id)).update({
         last_changed: firebase.firestore.Timestamp.now(),
         status: QueueStatus.FetchingMetadata,
@@ -76,21 +81,18 @@ const fetch = async ({account_id, file, key}: TmdbQueueEntry & SchedulerMeta) =>
     }
 
     await batch.commit();
-
-    /*
-     * After the batch, so we can be sure that
-     * the new metadata has already been persisted.
-     */
-    await db.user(account_id).indexingQueueEntry(String(file.putio_id)).update({
-        last_changed: firebase.firestore.Timestamp.now(),
-        status: QueueStatus.Waiting,
-    });
 };
 
 export const fetchMetadata = functions.https.onRequest(async (req, res) => {
     try {
         await fetch(req.body);
         res.status(204).send();
+
+        const {account_id, file} = req.body as TmdbQueueEntry;
+        await db.user(account_id).indexingQueueEntry(String(file.putio_id)).update({
+            last_changed: firebase.firestore.Timestamp.now(),
+            status: QueueStatus.Waiting,
+        });
     } catch (err) {
         if(err instanceof TooManyRequestsError) {
             res.status(err.code).set('Retry-After', err.retryAfter).send();
