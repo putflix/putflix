@@ -5,7 +5,6 @@ import parseTorrentName from 'parse-torrent-name';
 import { db, firestore } from '../util/firestore';
 import { getSeason, searchMovies, searchShows, TooManyRequestsError } from '../util/tmdb';
 import { DedupeEntry, MediaType, SchedulerMeta, TmdbQueueEntry } from '../util/types';
-import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } from 'constants';
 
 const fetch = async ({account_id, file, key}: TmdbQueueEntry & SchedulerMeta) => {
     // We have not seen this file yet. Parse info from the file name and query TMDb.

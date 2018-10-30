@@ -2,9 +2,9 @@ import * as firebase from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import parseTorrentName from 'parse-torrent-name';
 
-import { firestore, db } from '../util/firestore';
+import { db, firestore } from '../util/firestore';
 import { getSeason, searchMovies, searchShows } from '../util/tmdb';
-import { DedupeEntry, IndexingQueueEntry, QueueStatus, UncategorizedFile, MediaType, TmdbQueueEntry } from '../util/types';
+import { DedupeEntry, IndexingQueueEntry, MediaType, QueueStatus, TmdbQueueEntry, UncategorizedFile } from '../util/types';
 
 const indexer = async (
     queueSnap: firebase.firestore.DocumentSnapshot,
@@ -56,12 +56,12 @@ const indexer = async (
                     throw new Error("Found an episode reference but missing season and series reference.");
                 }
 
-                batch.set(user.series(series_reference), { metadata: {} });
-                batch.set(user.season(season_reference), { metadata: {} });
-                batch.set(user.episode(reference), file);
+                batch.set(user.series(String(series_reference)), { metadata: {} });
+                batch.set(user.season(String(season_reference)), { metadata: {} });
+                batch.set(user.episode(String(reference)), file);
                 break;
             case MediaType.Movie:
-                batch.set(user.movie(reference), file);
+                batch.set(user.movie(String(reference)), file);
                 break;
             default:
                 throw new Error(`Unknown reference type '${type}'.`);

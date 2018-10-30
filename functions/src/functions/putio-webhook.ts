@@ -3,7 +3,7 @@ import * as functions from 'firebase-functions';
 import chunk from 'lodash/chunk';
 import request from 'request-promise-native';
 
-import { firestore, db } from '../util/firestore';
+import { db, firestore } from '../util/firestore';
 import { collect } from '../util/iteration';
 import {
     fileListUrl,
