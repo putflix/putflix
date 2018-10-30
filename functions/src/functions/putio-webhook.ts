@@ -66,7 +66,10 @@ const fileListUrl = 'https://api.put.io/v2/files/';
 async function* listDirectoryRecursive(dirId: number): AsyncIterable<PutIoFile> {
     const listResp = await fetch(`${fileListUrl}?parent_id=${dirId}`);
     if (!listResp.ok) {
-        throw new Error(`Got invalid status code ${listResp.status} from put.io API.`);
+        throw new Error(
+            `Got invalid response code from put.io API: ${listResp.status}\n`+
+            (await listResp.text())
+        );
     }
 
     const { files }: { files: PutIoFile[] } = await listResp.json();
@@ -91,7 +94,10 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
 
     const fileResp = await fetch(fileUrl + (req.body as PutIoTransfer).file_id);
     if (!fileResp.ok) {
-        throw new Error("Got invalid response from put.io API.");
+        throw new Error(
+            `Got invalid response code from put.io API: ${fileResp.status}\n`+
+            (await fileResp.text())
+        );
     }
     const { file }: { file: PutIoFile } = await fileResp.json();
 
