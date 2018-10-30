@@ -114,7 +114,7 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
 export const putioWebhook = functions.https.onRequest(async (req, res) => {
     try {
         await webhook(req, res);
-        res.json({ success: true });
+        res.status(202).send();
     } catch (err) {
         let code = 500;
         let msg = "Internal server error.";
@@ -122,7 +122,7 @@ export const putioWebhook = functions.https.onRequest(async (req, res) => {
             code = err.code;
             msg = err.message;
         }
-        res.status(code).json({ success: false, msg });
+        res.status(code).json({ msg });
 
         throw err;
     }
