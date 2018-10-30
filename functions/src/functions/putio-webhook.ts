@@ -1,7 +1,7 @@
 import * as firebase from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import chunk from 'lodash/chunk';
-import fetch from 'node-fetch';
+import request from 'request-promise-native';
 
 import { firestore } from '../util/firestore';
 import { collect } from '../util/iteration';
@@ -16,15 +16,8 @@ import {
 import { File, IndexingQueueEntry } from '../util/types';
 
 async function* listDirectoryRecursive(dirId: number): AsyncIterable<PutIoFile> {
-    const listResp = await fetch(fileListUrl(dirId));
-    if (!listResp.ok) {
-        throw new Error(
-            `Got invalid response code from put.io API: ${listResp.status}\n`+
-            (await listResp.text())
-        );
-    }
+    const { files }: { files: PutIoFile[] } = await request(fileListUrl(dirId), { json: true });
 
-    const { files }: { files: PutIoFile[] } = await listResp.json();
     for (const f of files) {
         if (f.file_type === PutIoFileType.Folder) {
             yield* listDirectoryRecursive(f.id);
@@ -63,15 +56,7 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
 
     // First collect the files to be indexed from the put.io API
 
-    const fileResp = await fetch(fileUrl(payload.file_id));
-    if (!fileResp.ok) {
-        throw new Error(
-            `Got invalid response code from put.io API: ${fileResp.status}\n`+
-            (await fileResp.text())
-        );
-    }
-    const { file }: { file: PutIoFile } = await fileResp.json();
-
+    const { file }: { file: PutIoFile } = await request(fileUrl(payload.file_id), { json: true });
     const files = (file.file_type === PutIoFileType.Folder)
         ? await collect(listDirectoryRecursive(file.id))
         : [file];
