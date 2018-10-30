@@ -1,6 +1,6 @@
 import * as firebase from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import ptn from 'parse-torrent-name';
+import parseTorrentName from 'parse-torrent-name';
 
 import { firestore } from '../util/firestore';
 import { getSeason, searchMovies, searchShows } from '../util/tmdb';
@@ -92,7 +92,7 @@ const indexer = async (queueSnap: firebase.firestore.DocumentSnapshot, ctx: func
 
     // We have not seen this file yet. Parse info from the file name and query TMDb.
 
-    const details = ptn(file.filename);
+    const details = parseTorrentName(file.filename);
     const isTvShow = details.season && details.episode;
 
     const batch = firestore.batch();
