@@ -19,6 +19,7 @@ const dbSingles = {
     series: (id: string) => dbCollections.tmdbSeries.doc(id),
     season: (id: string) => dbCollections.tmdbSeasons.doc(id),
     episode: (id: string) => dbCollections.tmdbEpisodes.doc(id),
+    tmdbQueueEntry: (id: string) => dbCollections.tmdbQueue.doc(id),
     dedupMapping: (id: string) => dbCollections.dedupMap.doc(id),
     account: (putIoAccountId: string) => dbCollections.accounts.doc(putIoAccountId),
     user: (putIoAccountId: string) => {

@@ -17,8 +17,9 @@ export interface IndexingQueueEntry {
     status: QueueStatus;
 }
 
-export interface SchedulerMeta {
+export interface TmdbQueueEntry extends IndexingQueueEntry {
     key: string;
+    payload: TmdbQueuePayload;
 }
 
 export interface TmdbQueuePayload {

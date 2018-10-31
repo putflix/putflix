@@ -14,6 +14,12 @@ export class InternalServerError extends Error implements HTTPError {
     }
 }
 
+export class NotFoundError extends Error implements HTTPError {
+    get code() {
+        return 404;
+    }
+}
+
 export class TooManyRequestsError extends Error implements HTTPError {
     private _retryAfter;
 

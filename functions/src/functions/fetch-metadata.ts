@@ -2,8 +2,10 @@ import * as firebase from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import parseTorrentName from 'parse-torrent-name';
 
+import { NotFoundError, TooManyRequestsError } from '../util/errors';
+
 import { db, firestore } from '../util/firestore';
-import { getSeason, searchMovies, searchShows, TooManyRequestsError } from '../util/tmdb';
+import { getSeason, searchMovies, searchShows } from '../util/tmdb';
 import { DedupeEntry, MediaType, QueueStatus, TmdbQueueEntry, TmdbQueuePayload } from '../util/types';
 
 const fetch = async ({account_id, file}: TmdbQueuePayload) => {
@@ -37,8 +39,7 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
 
         const season = await getSeason(seriesData.id, details.season);
         if (!season) {
-            console.log(`Could not find season ${details.season}.`);
-            return;
+            throw new NotFoundError(`Could not find season ${details.season}.`);
         }
 
         // tslint:disable-next-line:no-unnecessary-type-assertion
@@ -46,7 +47,7 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
         const episode = episodes.find(ep => ep.episode_number === details.episode);
 
         if (!episode) {
-            console.log(`Could not find episode ${details.episode}.`);
+            throw new NotFoundError(`Could not find episode ${details.episode}.`);
             return;
         }
 
@@ -69,7 +70,7 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
     } else {
         const [movie] = await searchMovies(details.title, details.year);
         if (!movie) {
-            console.log(`Could not find ${JSON.stringify(details)} on TMDb.`);
+            throw new NotFoundError(`Could not find ${JSON.stringify(details)} on TMDb.`);
             return;
         }
 
@@ -105,10 +106,8 @@ export const fetchMetadata = functions.https.onRequest(async (req, res) => {
             code = err.code;
             msg = err.message;
         }
-        res.status(code).json({ success: false, msg });
+        res.status(code).json({ msg });
 
         throw err;
     }
 });
-
-export default fetchMetadata;

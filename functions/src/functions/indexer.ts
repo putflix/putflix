@@ -77,8 +77,12 @@ const indexer = async (
     console.log("This file is not known yet. Adding it to the TMDb queue...");
 
     await db.tmdbQueue.add({
-        account_id: ctx.params.accountId,
-        file,
+        last_changed: firebase.firestore.Timestamp.now(),
+        status: QueueStatus.Waiting,
+        payload: {
+            account_id: ctx.params.accountId,
+            file,
+        },
     } as TmdbQueueEntry);
 };
 
