@@ -24,21 +24,21 @@ export async function getSeason(showId: number, seasonNumber: number): Promise<S
     return doFetch<Season>(url.toString());
 }
 
-export function searchMovies(title: string, year?: number): Promise<Movie[]> {
+export async function searchMovies(title: string, year?: number): Promise<Movie[]> {
     const url = new URL(movieSearch);
     url.searchParams.append('query', title);
     if (year) {
         url.searchParams.append('year', String(year));
     }
 
-    return doFetch<Movie[]>(url);
+    return (await doFetch<any>(url)).results as Movie[];
 }
 
-export function searchShows(title: string): Promise<TvShow[]> {
+export async function searchShows(title: string): Promise<TvShow[]> {
     const url = new URL(tvSearch);
     url.searchParams.append('query', title);
 
-    return doFetch<TvShow[]>(url);
+    return (await doFetch<any>(url)).results as TvShow[];
 }
 
 async function doFetch<T>(url: string | URL): Promise<T | null> {
