@@ -96,7 +96,7 @@ export const fetchMetadata = functions.https.onRequest(async (req, res) => {
         });
     } catch (err) {
         if(err instanceof TooManyRequestsError) {
-            res.status(err.code).set('Retry-After', err.retryAfter).send();
+            res.set('Retry-After', err.retryAfter).status(err.code).send();
             return;
         }
 
