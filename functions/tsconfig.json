@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
-    "lib": ["es6", "esnext"],
+    "lib": ["es2017", "esnext"],
     "module": "commonjs",
     "noImplicitReturns": true,
     "outDir": "lib",
     "sourceMap": true,
-    "target": "es6",
+    "target": "es2017",
     "esModuleInterop": true,
     "importHelpers": true,
     "skipLibCheck": true
