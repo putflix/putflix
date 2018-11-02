@@ -74,5 +74,5 @@ export interface PutIoSearchResponse {
 export const authenticatedApi = (token: string) => ({
     fileUrl: (fileId: number) => `https://api.put.io/v2/files/${fileId}?oauth_token=${token}`,
     fileListUrl: (parentId: number) => `https://api.put.io/v2/files/list?parent_id=${parentId}&oauth_token=${token}`,
-    search: (type: PutIoFileType, page?: number) => `https://api.put.io/v2/files/search/type:${type}/page/${page || -1}?oauth_token=${token}`
+    search: (type: PutIoFileType, page?: number) => `https://api.put.io/v2/files/search/type:${type.toLowerCase()}/page/${page || -1}?oauth_token=${token}`
 })
