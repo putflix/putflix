@@ -10,6 +10,10 @@ export interface DedupeEntry {
     season_reference?: number;
     series_reference?: number;
     type: MediaType;
+    name: string;
+    series_name?: string;
+    season_number?: number;
+    episode_number?: number;
 }
 
 export interface IndexingQueueEntry {

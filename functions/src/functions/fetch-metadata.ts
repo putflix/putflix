@@ -65,6 +65,10 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
             reference: episodeData.id,
             season_reference: seasonData.id,
             series_reference: seriesData.id,
+            name: episodeData.name,
+            series_name: seriesData.name,
+            season_number: seasonData.season_number,
+            episode_number: details.episode,
         } as DedupeEntry);
     } else {
         const [movie] = await searchMovies(details.title, details.year);
@@ -76,7 +80,11 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
         // We've got the info now, update Firestore
         console.log(`Got a match for TMDb ID ${movie.id} (${movie.title} / ${movie.release_date}). Updating DB...`);
 
-        batch.set(dedupRef, { reference: movie.id, type: MediaType.Movie } as DedupeEntry);
+        batch.set(dedupRef, {
+            reference: movie.id,
+            type: MediaType.Movie,
+            name: movie.title,
+        } as DedupeEntry);
         batch.set(db.tmdbMovies.doc(String(movie.id)), movie);
     }
 
