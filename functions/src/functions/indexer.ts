@@ -72,6 +72,7 @@ const indexer = async (
 
     console.log("This file is not known yet. Adding it to the TMDb queue...");
 
+    await queueSnap.ref.delete();
     await db.tmdbQueue.add({
         last_changed: firebase.firestore.Timestamp.now(),
         status: QueueStatus.Waiting,

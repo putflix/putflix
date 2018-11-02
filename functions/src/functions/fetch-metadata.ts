@@ -29,8 +29,7 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
     if (isTvShow) {
         const [seriesData] = await searchShows(details.title);
         if (!seriesData) {
-            console.log(`Could not find ${JSON.stringify(details)} on TMDb.`);
-            return;
+            throw new NotFoundError(`Could not find ${JSON.stringify(details)} on TMDb.`);
         }
 
         // We know the TV show, but still lack season / episode info
@@ -38,8 +37,7 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
 
         const season = await getSeason(seriesData.id, details.season);
         if (!season) {
-            console.log(`Could not find season ${details.season}.`);
-            return;
+            throw new NotFoundError(`Could not find season ${details.season}.`);
         }
 
         // tslint:disable-next-line:no-unnecessary-type-assertion
@@ -47,8 +45,7 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
         const episode = episodes.find(ep => ep.episode_number === details.episode);
 
         if (!episode) {
-            console.log(`Could not find episode ${details.episode}.`);
-            return;
+            throw new NotFoundError(`Could not find episode ${details.episode}.`);
         }
 
         // Got all the info now, update Firestore...
@@ -73,8 +70,7 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
     } else {
         const [movie] = await searchMovies(details.title, details.year);
         if (!movie) {
-            console.log(`Could not find ${JSON.stringify(details)} on TMDb.`);
-            return;
+            throw new NotFoundError(`Could not find ${JSON.stringify(details)} on TMDb.`);
         }
 
         // We've got the info now, update Firestore
@@ -92,11 +88,12 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
 };
 
 export const fetchMetadata = functions.https.onRequest(async (req, res) => {
+    const {account_id, file} = req.body as TmdbQueuePayload;
+
     try {
         await fetch(req.body);
         res.status(204).send();
 
-        const {account_id, file} = req.body as TmdbQueuePayload;
         await db.user(account_id).indexingQueueEntry(String(file.putio_id)).update({
             last_changed: firebase.firestore.Timestamp.now(),
             status: QueueStatus.Waiting,
@@ -104,6 +101,16 @@ export const fetchMetadata = functions.https.onRequest(async (req, res) => {
     } catch (err) {
         if(err instanceof TooManyRequestsError) {
             res.set('Retry-After', err.retryAfter).status(err.code).send();
+            return;
+        }
+
+        if(err instanceof NotFoundError) {
+            // Remove file from the user queue as it isn't needed anymore
+            await db.user(account_id).indexingQueueEntry(String(file.putio_id)).delete();
+
+            // This should not cause the scheduler
+            // to mark that task as an error.
+            res.status(200).json({ msg: err.message });
             return;
         }
 
