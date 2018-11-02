@@ -33,10 +33,9 @@ const indexer = async (
     const file = fileSnap.data() as UncategorizedFile;
 
     // Check if we have seen this file already
-
     const dedupId = `${file.crc32}-${file.size}`;
     const dedupRef = db.dedupMapping(dedupId);
-    const dedupSnap = await dedupRef.get()
+    const dedupSnap = await dedupRef.get();
 
     if (dedupSnap.exists) {
         // We have seen this file already. Move it to the appropriate location

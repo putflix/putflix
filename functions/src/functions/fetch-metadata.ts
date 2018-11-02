@@ -13,9 +13,8 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
     const details = parseTorrentName(file.filename);
     const isTvShow = details.season && details.episode;
 
-    const dedupRef = db.dedupMapping(`${file.crc32}-${file.size}`);
-
     // If we've already fetched metadata for this before, do nothing
+    const dedupRef = db.dedupMapping(`${file.crc32}-${file.size}`);
     if ((await dedupRef.get()).exists) {
         return;
     }
@@ -40,6 +39,7 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
         const season = await getSeason(seriesData.id, details.season);
         if (!season) {
             console.log(`Could not find season ${details.season}.`);
+            return;
         }
 
         // tslint:disable-next-line:no-unnecessary-type-assertion
