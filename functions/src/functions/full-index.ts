@@ -38,7 +38,7 @@ export const fullIndex = functions.https.onRequest(async (req, res) => {
     } catch (err) {
         let code = 500;
         let msg = "Internal server error.";
-        if ('code' in err) {
+        if ('code' in err && err.code > 100 && err.code < 600) {
             code = err.code;
             msg = err.message;
         }
