@@ -54,7 +54,6 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
         // Got all the info now, update Firestore...
         console.log(`Found season (${season.season_number}) & episode (${episode.episode_number}). Updating Firestore...`);
 
-        // tslint:disable-next-line:no-unnecessary-type-assertion
         const { crew, guest_stars, ...episodeData } = episode;
 
         batch.set(db.tmdbSeries.doc(String(seriesData.id)), seriesData);
