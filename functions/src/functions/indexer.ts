@@ -1,9 +1,7 @@
 import * as firebase from 'firebase-admin';
 import * as functions from 'firebase-functions';
-import parseTorrentName from 'parse-torrent-name';
 
 import { db, firestore } from '../util/firestore';
-import { getSeason, searchMovies, searchShows } from '../util/tmdb';
 import { DedupeEntry, IndexingQueueEntry, MediaType, QueueStatus, TmdbQueueEntry, UncategorizedFile } from '../util/types';
 
 const indexer = async (
