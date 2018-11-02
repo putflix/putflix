@@ -6,7 +6,7 @@ import { NotFoundError, TooManyRequestsError } from '../util/errors';
 
 import { db, firestore } from '../util/firestore';
 import { getSeason, searchMovies, searchShows } from '../util/tmdb';
-import { DedupeEntry, MediaType, QueueStatus, TmdbQueueEntry, TmdbQueuePayload } from '../util/types';
+import { DedupeEntry, MediaType, QueueStatus, TmdbQueuePayload } from '../util/types';
 
 const fetch = async ({account_id, file}: TmdbQueuePayload) => {
     // We have not seen this file yet. Parse info from the file name and query TMDb.

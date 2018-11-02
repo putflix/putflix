@@ -2,7 +2,7 @@ import * as firebase from 'firebase-admin';
 import * as functions from 'firebase-functions';
 
 import { BadRequestError, NotFoundError } from '../util/errors';
-import { db, firestore } from '../util/firestore';
+import { db } from '../util/firestore';
 import { QueueStatus } from '../util/types';
 
 interface ScheduleStatusUpdate {
