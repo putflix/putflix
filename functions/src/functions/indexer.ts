@@ -53,12 +53,12 @@ const indexer = async (
                     throw new Error("Found an episode reference but missing season and series reference.");
                 }
 
-                batch.update(user.series(String(series_reference)), { created_at: firebase.firestore.Timestamp.now() });
-                batch.update(user.season(String(season_reference)), { created_at: firebase.firestore.Timestamp.now() });
-                batch.update(user.episode(String(reference)), file);
+                batch.set(user.series(String(series_reference)), { created_at: firebase.firestore.Timestamp.now() }, {merge: true});
+                batch.set(user.season(String(season_reference)), { created_at: firebase.firestore.Timestamp.now() }, {merge: true});
+                batch.set(user.episode(String(reference)), file, {merge: true});
                 break;
             case MediaType.Movie:
-                batch.update(user.movie(String(reference)), file);
+                batch.set(user.movie(String(reference)), file, {merge: true});
                 break;
             default:
                 throw new Error(`Unknown reference type '${type}'.`);

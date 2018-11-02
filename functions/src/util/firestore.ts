@@ -63,7 +63,7 @@ export const insertNewFiles = async (files: PutIoFile[], uid: string) => {
             for (const file of ch) {
                 const fileIdString = String(file.id);
 
-                batch.update(user.uncategorizedFile(fileIdString), {
+                batch.set(user.uncategorizedFile(fileIdString), {
                     created_at: firebase.firestore.Timestamp.fromDate(new Date(file.created_at)),
                     crc32: file.crc32,
                     filename: file.name,
@@ -71,11 +71,11 @@ export const insertNewFiles = async (files: PutIoFile[], uid: string) => {
                     mime: file.content_type,
                     putio_id: file.id,
                     size: file.size,
-                } as UncategorizedFile);
-                batch.update(user.indexingQueueEntry(fileIdString), {
+                } as UncategorizedFile, { merge: true });
+                batch.set(user.indexingQueueEntry(fileIdString), {
                     last_changed: firebase.firestore.Timestamp.now(),
                     status: 'waiting',
-                } as IndexingQueueEntry);
+                } as IndexingQueueEntry, { merge: true });
             }
 
             return batch.commit();
