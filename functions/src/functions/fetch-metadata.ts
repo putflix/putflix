@@ -48,7 +48,6 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
 
         if (!episode) {
             throw new NotFoundError(`Could not find episode ${details.episode}.`);
-            return;
         }
 
         // Got all the info now, update Firestore...
