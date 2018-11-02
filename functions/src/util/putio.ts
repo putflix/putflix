@@ -64,7 +64,15 @@ export interface PutIoTransfer {
     up_speed: number;
 }
 
+export interface PutIoSearchResponse {
+    files: PutIoFile[];
+    next: string | null;
+    status: string;
+    total: number;
+}
+
 export const authenticatedApi = (token: string) => ({
     fileUrl: (fileId: number) => `https://api.put.io/v2/files/${fileId}?oauth_token=${token}`,
     fileListUrl: (parentId: number) => `https://api.put.io/v2/files/list?parent_id=${parentId}&oauth_token=${token}`,
+    search: (type: PutIoFileType, page?: number) => `https://api.put.io/v2/files/search/type:${type}/page/${page || -1}?oauth_token=${token}`
 })
