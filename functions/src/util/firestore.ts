@@ -58,6 +58,8 @@ export const insertNewFiles = async (files: PutIoFile[], uid: string) => {
     const existingFileIds = existingFiles.docs.map(doc => doc.id);
     const newFiles = files.filter(f => !existingFileIds.includes(String(f.id)));
 
+    console.log(`Skipping ${files.length - newFiles.length} files...`);
+
     // Firestore batches can only process up to 500 items at a time, so we chunk
     // the list of files to be indexed and process them in separate batches.
     const firestoreWrites = chunk(newFiles, 250) // Two batch actions per file
