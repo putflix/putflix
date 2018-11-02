@@ -19,6 +19,8 @@ const getQueueItems = async (req) => {
         .limit(limit)
         .get();
 
+    entries.forEach(entry => entry.ref.update({status: QueueStatus.Processing}));
+
     return {
         items: entries.docs.map(entry => ({
             endpoint: `https://us-central1-${process.env.GCLOUD_PROJECT}.cloudfunctions.net/fetchMetadata`,
