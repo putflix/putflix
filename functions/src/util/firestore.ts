@@ -68,7 +68,6 @@ export const insertNewFiles = async (files: PutIoFile[], uid: string) => {
                     crc32: file.crc32,
                     filename: file.name,
                     is_mp4_available: file.is_mp4_available,
-                    metadata: {},
                     mime: file.content_type,
                     putio_id: file.id,
                     size: file.size,

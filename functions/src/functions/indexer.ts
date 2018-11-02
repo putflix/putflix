@@ -41,7 +41,6 @@ const indexer = async (
     if (dedupSnap.exists) {
         // We have seen this file already. Move it to the appropriate location
         // in the DB and remove the queue entry. We're done.
-
         const { type, reference, season_reference, series_reference } = dedupSnap.data() as DedupeEntry;
         console.log(`Association ${dedupId} -> ${reference} found.`);
 
@@ -54,12 +53,12 @@ const indexer = async (
                     throw new Error("Found an episode reference but missing season and series reference.");
                 }
 
-                batch.set(user.series(String(series_reference)), { metadata: {} });
-                batch.set(user.season(String(season_reference)), { metadata: {} });
-                batch.set(user.episode(String(reference)), file);
+                batch.update(user.series(String(series_reference)), { created_at: firebase.firestore.Timestamp.now() });
+                batch.update(user.season(String(season_reference)), { created_at: firebase.firestore.Timestamp.now() });
+                batch.update(user.episode(String(reference)), file);
                 break;
             case MediaType.Movie:
-                batch.set(user.movie(String(reference)), file);
+                batch.update(user.movie(String(reference)), file);
                 break;
             default:
                 throw new Error(`Unknown reference type '${type}'.`);

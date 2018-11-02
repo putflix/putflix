@@ -33,7 +33,7 @@ export interface Item<M> {
     filename: string;
     is_mp4_available: boolean;
     mime: string;
-    metadata: M;
+    metadata: M | null;
     putio_id: number;
     size: number;
 }
