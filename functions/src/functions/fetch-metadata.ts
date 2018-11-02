@@ -39,7 +39,7 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
 
         const season = await getSeason(seriesData.id, details.season);
         if (!season) {
-            throw new NotFoundError(`Could not find season ${details.season}.`);
+            console.log(`Could not find season ${details.season}.`);
         }
 
         // tslint:disable-next-line:no-unnecessary-type-assertion
@@ -47,7 +47,8 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
         const episode = episodes.find(ep => ep.episode_number === details.episode);
 
         if (!episode) {
-            throw new NotFoundError(`Could not find episode ${details.episode}.`);
+            console.log(`Could not find episode ${details.episode}.`);
+            return;
         }
 
         // Got all the info now, update Firestore...
@@ -69,7 +70,7 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
     } else {
         const [movie] = await searchMovies(details.title, details.year);
         if (!movie) {
-            throw new NotFoundError(`Could not find ${JSON.stringify(details)} on TMDb.`);
+            console.log(`Could not find ${JSON.stringify(details)} on TMDb.`);
             return;
         }
 
