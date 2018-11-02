@@ -43,7 +43,7 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
         }
 
         // tslint:disable-next-line:no-unnecessary-type-assertion
-        const { episodes, ...seasonData } = season as any;
+        const { episodes, ...seasonData } = season;
         const episode = episodes.find(ep => ep.episode_number === details.episode);
 
         if (!episode) {

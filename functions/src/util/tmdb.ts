@@ -19,9 +19,11 @@ const [movieSearch, tvSearch, seasonDetailsBase] = (() => {
     return [movieSearch, tvSearch, seasonDetails];
 })();
 
-export async function getSeason(showId: number, seasonNumber: number): Promise<Season | null> {
+type SeasonResponse = Season & {episodes: any[]};
+
+export async function getSeason(showId: number, seasonNumber: number): Promise<SeasonResponse | null> {
     const url = new URL(seasonDetailsBase + `/${showId}/season/${seasonNumber}`);
-    return doFetch<Season>(url.toString());
+    return doFetch<SeasonResponse>(url.toString());
 }
 
 export async function searchMovies(title: string, year?: number): Promise<Movie[]> {
