@@ -4,7 +4,7 @@ import chunk from 'lodash/chunk';
 import request from 'request-promise-native';
 
 import { BadRequestError } from '../util/errors';
-import { db, firestore } from '../util/firestore';
+import { db, firestore, insertNewFiles } from '../util/firestore';
 import {
     authenticatedApi,
     PutIoFile,
@@ -57,7 +57,6 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
     const api = authenticatedApi(query.token);
 
     // First collect the files to be indexed from the put.io API
-
     const { file }: { file: PutIoFile } = await request(
         api.fileUrl(payload.file_id),
         { json: true },
@@ -67,35 +66,7 @@ const webhook = async (req: functions.Request, res: functions.Response) => {
         : [file];
 
     // And write them to Firestore...
-    // Firestore batches can only process up to 500 items at a time, so we chunk
-    // the list of files to be indexed and process them in separate batches.
-    const firestoreWrites = chunk(files, 250) // Two batch entries per file
-        .map(ch => {
-            const batch = firestore.batch();
-            const user = db.user(query.uid);
-
-            for (const file of ch) {
-                const fileIdString = String(file.id);
-
-                batch.set(user.uncategorizedFile(fileIdString), {
-                    created_at: firebase.firestore.Timestamp.fromDate(new Date(file.created_at)),
-                    crc32: file.crc32,
-                    filename: file.name,
-                    is_mp4_available: file.is_mp4_available,
-                    metadata: {},
-                    mime: file.content_type,
-                    putio_id: file.id,
-                    size: file.size,
-                } as UncategorizedFile);
-                batch.set(user.indexingQueueEntry(fileIdString), {
-                    last_changed: firebase.firestore.Timestamp.now(),
-                    status: 'waiting',
-                } as IndexingQueueEntry);
-            }
-
-            return batch.commit();
-        });
-    await Promise.all(firestoreWrites);
+    await insertNewFiles(files, query.uid);
 };
 
 export const putioWebhook = functions.https.onRequest(async (req, res) => {
