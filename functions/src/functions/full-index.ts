@@ -25,7 +25,7 @@ const indexAccount = async (req: functions.Request, res: functions.Response) => 
 
     // Get all video files for the specified token
     const api = authenticatedApi(query.token);
-    const { files }: PutIoSearchResponse = await request(api.search(PutIoFileType.Video), { json: true })
+    const { files }: PutIoSearchResponse = await request(api.search(PutIoFileType.Video), { json: true });
 
     // And write them to Firestore...
     await insertNewFiles(files, query.uid);
