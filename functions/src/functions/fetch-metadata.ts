@@ -112,6 +112,7 @@ export const fetchMetadata = functions.https.onRequest(async (req, res) => {
 
         if(err instanceof RaceConditionError) {
             res.status(200).json({ msg: err.message });
+            return;
         }
 
         if(err instanceof NotFoundError) {
