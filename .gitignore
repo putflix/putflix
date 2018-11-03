@@ -61,3 +61,4 @@ typings/
 .next
 
 functions/lib/
+functions/.runtimeconfig.json
