@@ -4,7 +4,7 @@ import chunk from 'lodash/chunk';
 import request from 'request-promise-native';
 
 import { BadRequestError } from '../util/errors';
-import { db, firestore, insertNewFiles } from '../util/firestore';
+import { insertNewFiles } from '../util/internal-queue';
 import {
     authenticatedApi,
     PutIoFile,
