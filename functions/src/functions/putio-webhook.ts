@@ -12,7 +12,6 @@ import {
     PutIoTransfer,
     TransferStatus,
 } from '../util/putio';
-import { IndexingQueueEntry, UncategorizedFile } from '../util/types';
 
 interface WebhookQuery {
     uid?: string;
