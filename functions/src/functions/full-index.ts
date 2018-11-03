@@ -3,10 +3,9 @@ import * as functions from 'firebase-functions';
 import request from 'request-promise-native';
 
 import { BadRequestError } from '../util/errors';
-import { insertNewFiles } from '../util/firestore';
+import { deleteOldFiles, getAllExistingFileIds, insertNewFiles } from '../util/internal-queue';
 import {
     authenticatedApi,
-    PutIoFile,
     PutIoFileType,
     PutIoSearchResponse,
 } from '../util/putio';
@@ -23,18 +22,26 @@ const indexAccount = async (req: functions.Request, res: functions.Response) => 
         throw new BadRequestError("Missing query parameters.")
     }
 
+    // Get existing file IDs to do delta calculations
+    const existingFileIds = await getAllExistingFileIds(query.uid);
+
     // Get all video files for the specified token
     const api = authenticatedApi(query.token);
     const { files }: PutIoSearchResponse = await request(api.search(PutIoFileType.Video), { json: true });
 
-    // And write them to Firestore...
-    await insertNewFiles(files, query.uid);
+    // And write them to Firestore
+    await insertNewFiles(files, query.uid, existingFileIds);
+
+    // Remove old files from Firestore
+    await deleteOldFiles(files, query.uid, existingFileIds);
+
+    return existingFileIds;
 };
 
 export const fullIndex = functions.https.onRequest(async (req, res) => {
     try {
-        await indexAccount(req, res);
-        res.status(202).send();
+        const result = await indexAccount(req, res);
+        res.status(202).json({result});
     } catch (err) {
         let code = 500;
         let msg = "Internal server error.";

@@ -16,14 +16,14 @@ export interface DedupeEntry {
     episode_number?: number;
 }
 
-export interface IndexingQueueEntry {
+export interface IndexingQueueEntry<T> {
     last_changed: firebase.firestore.Timestamp;
     status: QueueStatus;
+    payload: T;
 }
 
-export interface TmdbQueueEntry extends IndexingQueueEntry {
+export interface TmdbQueueEntry extends IndexingQueueEntry<TmdbQueuePayload> {
     key: string;
-    payload: TmdbQueuePayload;
 }
 
 export interface TmdbQueuePayload {

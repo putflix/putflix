@@ -10,27 +10,12 @@ const indexer = async (
 ) => {
     console.log(`Processing put.io ID ${queueSnap.id}...`);
 
-    const queueEntryUpdate = queueSnap.ref.update({
+    await queueSnap.ref.update({
         last_changed: firebase.firestore.Timestamp.now(),
         status: QueueStatus.Processing,
-    } as IndexingQueueEntry);
-    const fileSnapPromise = db
-        .user(ctx.params.accountId)
-        .uncategorizedFile(queueSnap.id)
-        .get();
+    } as IndexingQueueEntry<UncategorizedFile>);
 
-    const [fileSnap] = await Promise.all([
-        fileSnapPromise,
-        queueEntryUpdate,
-    ]);
-
-    if (!fileSnap.exists) {
-        console.error(`Could not find file corresponding to queue entry ${queueSnap.id}.`);
-        await queueSnap.ref.delete();
-        return;
-    }
-
-    const file = fileSnap.data() as UncategorizedFile;
+    const file = queueSnap.data().payload as UncategorizedFile;
 
     // Check if we have seen this file already
     const dedupId = `${file.crc32}-${file.size}`;
@@ -64,7 +49,6 @@ const indexer = async (
         }
 
         batch.delete(queueSnap.ref);
-        batch.delete(fileSnap.ref);
 
         await batch.commit();
         return;
@@ -72,7 +56,6 @@ const indexer = async (
 
     console.log("This file is not known yet. Adding it to the TMDb queue...");
 
-    await queueSnap.ref.delete();
     await db.tmdbQueue.add({
         last_changed: firebase.firestore.Timestamp.now(),
         status: QueueStatus.Waiting,
@@ -93,7 +76,7 @@ export const indexFileCreate = indexerFuncRef
             await queueSnap.ref.update({
                 last_changed: firebase.firestore.Timestamp.now(),
                 status: QueueStatus.Errored
-            } as Partial<IndexingQueueEntry>);
+            } as Partial<IndexingQueueEntry<UncategorizedFile>>);
             throw err;
         }
     });
@@ -109,7 +92,7 @@ export const indexFileUpdate = indexerFuncRef
             await queueSnap.after.ref.update({
                 last_changed: firebase.firestore.Timestamp.now(),
                 status: QueueStatus.Errored
-            } as Partial<IndexingQueueEntry>);
+            } as Partial<IndexingQueueEntry<UncategorizedFile>>);
             throw err;
         }
     });

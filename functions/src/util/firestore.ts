@@ -1,5 +1,5 @@
 import * as firebase from 'firebase-admin';
-import { chunk } from 'lodash';
+import { chunk, flatten } from 'lodash';
 import { PutIoFile } from './putio';
 import { IndexingQueueEntry, UncategorizedFile } from './types';
 
@@ -51,41 +51,3 @@ export const db = {
     ...dbCollections,
     ...dbSingles,
 };
-
-export const insertNewFiles = async (files: PutIoFile[], uid: string) => {
-    // Filter out existing files that have already been scanned and errored
-    const existingFiles = await db.user(uid).uncategorizedFiles.get();
-    const existingFileIds = existingFiles.docs.map(doc => doc.id);
-    const newFiles = files.filter(f => !existingFileIds.includes(String(f.id)));
-
-    console.log(`Skipping ${files.length - newFiles.length} files...`);
-
-    // Firestore batches can only process up to 500 items at a time, so we chunk
-    // the list of files to be indexed and process them in separate batches.
-    const firestoreWrites = chunk(newFiles, 250) // Two batch actions per file
-        .map(async ch => {
-            const batch = firestore.batch();
-            const user = db.user(uid);
-
-            for (const file of ch) {
-                const fileIdString = String(file.id);
-
-                batch.set(user.uncategorizedFile(fileIdString), {
-                    created_at: firebase.firestore.Timestamp.fromDate(new Date(file.created_at)),
-                    crc32: file.crc32,
-                    filename: file.name,
-                    is_mp4_available: file.is_mp4_available,
-                    mime: file.content_type,
-                    putio_id: file.id,
-                    size: file.size,
-                } as UncategorizedFile, { merge: true });
-                batch.set(user.indexingQueueEntry(fileIdString), {
-                    last_changed: firebase.firestore.Timestamp.now(),
-                    status: 'waiting',
-                } as IndexingQueueEntry, { merge: true });
-            }
-
-            return batch.commit();
-        });
-    await Promise.all(firestoreWrites);
-}

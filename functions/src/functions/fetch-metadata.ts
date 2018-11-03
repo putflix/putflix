@@ -2,7 +2,7 @@ import * as firebase from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import parseTorrentName from 'parse-torrent-name';
 
-import { NotFoundError, TooManyRequestsError } from '../util/errors';
+import { NotFoundError, RaceConditionError, TooManyRequestsError } from '../util/errors';
 
 import { db, firestore } from '../util/firestore';
 import { getSeason, searchMovies, searchShows } from '../util/tmdb';
@@ -19,7 +19,13 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
         return;
     }
 
-    await db.user(account_id).indexingQueueEntry(String(file.putio_id)).update({
+    // If the indexing entry doesn't exist anymore (race condition?), do nothing
+    const queueEntry = await db.user(account_id).indexingQueueEntry(String(file.putio_id));
+    if (!(await queueEntry.get()).exists) {
+        throw new RaceConditionError(`Could not find queue entry ${file.putio_id}. It has likely already been processed.`);
+    }
+
+    await queueEntry.update({
         last_changed: firebase.firestore.Timestamp.now(),
         status: QueueStatus.FetchingMetadata,
     });
@@ -104,9 +110,16 @@ export const fetchMetadata = functions.https.onRequest(async (req, res) => {
             return;
         }
 
+        if(err instanceof RaceConditionError) {
+            res.status(200).json({ msg: err.message });
+        }
+
         if(err instanceof NotFoundError) {
             // Remove file from the user queue as it isn't needed anymore
             await db.user(account_id).indexingQueueEntry(String(file.putio_id)).delete();
+
+            // Add that file to the list of uncategorized files
+            await db.user(account_id).uncategorizedFile(String(file.putio_id)).set(file);
 
             // This should not cause the scheduler
             // to mark that task as an error.
@@ -116,7 +129,7 @@ export const fetchMetadata = functions.https.onRequest(async (req, res) => {
 
         let code = 500;
         let msg = "Internal server error.";
-        if ("code" in err) {
+        if ("code" in err && err.code > 100 && err.code < 600) {
             code = err.code;
             msg = err.message;
         }

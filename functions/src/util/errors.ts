@@ -14,6 +14,12 @@ export class InternalServerError extends Error implements HTTPError {
     }
 }
 
+export class RaceConditionError extends Error implements HTTPError {
+    get code() {
+        return 500;
+    }
+}
+
 export class NotFoundError extends Error implements HTTPError {
     get code() {
         return 404;
