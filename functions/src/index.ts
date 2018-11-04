@@ -8,3 +8,4 @@ export * from './functions/putio-webhook';
 export * from './functions/fetch-metadata';
 export * from './functions/schedule';
 export * from './functions/full-index';
+export * from './functions/auth';

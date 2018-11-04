@@ -71,6 +71,52 @@ export interface PutIoSearchResponse {
     total: number;
 }
 
+export interface AuthResponse {
+    access_token: string;
+}
+
+export interface UserInfo {
+    account_active: boolean;
+    avatar_url: string;
+    can_create_sub_account: boolean;
+    days_until_files_deletion: number;
+    disk: {
+        avail: number;
+        size: number;
+        used: number;
+    };
+    has_voucher: boolean;
+    is_sub_account: boolean;
+    mail: string;
+    plan_expiration_date: string;
+    private_download_host_ip: null;
+    settings: {
+        beta_user: false;
+        callback_url: string;
+        dark_theme: false;
+        default_download_folder: number;
+        fluid_layout: false;
+        history_enabled: true;
+        is_invisible: null;
+        locale: null;
+        next_episode: true;
+        pushover_token: null;
+        sort_by: string;
+        start_from: true;
+        subtitle_languages: string[];
+        theater_mode: false;
+        transfer_sort_by: string;
+        trash_enabled: true;
+        tunnel_route_name: string;
+        use_private_download_ip: false;
+        video_player: null
+    };
+    simultaneous_download_limit: number;
+    subtitle_languages: string[];
+    user_id: number;
+    username: string;
+}
+
 export const authenticatedApi = (token: string) => ({
     fileUrl: (fileId: number) => `https://api.put.io/v2/files/${fileId}?oauth_token=${token}`,
     fileListUrl: (parentId: number) => `https://api.put.io/v2/files/list?parent_id=${parentId}&oauth_token=${token}`,
