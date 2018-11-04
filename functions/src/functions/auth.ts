@@ -47,6 +47,10 @@ export const auth = functions.https.onCall(async (data: AuthRequest) => {
                 photoURL: info.avatar_url,
                 email: info.mail,
             });
+
+            await firebase.auth().setCustomUserClaims(String(info.user_id), {
+                putio_access_token: authResponse.access_token
+            });
         }
 
         const token = await firebase.auth().createCustomToken(String(info.user_id));
