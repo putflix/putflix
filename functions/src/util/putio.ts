@@ -118,6 +118,7 @@ export interface UserInfo {
 }
 
 export const authenticatedApi = (token: string) => ({
+    accountInfo: `https://api.put.io/v2/account/info?oauth_token=${token}`,
     fileUrl: (fileId: number) => `https://api.put.io/v2/files/${fileId}?oauth_token=${token}`,
     fileListUrl: (parentId: number) => `https://api.put.io/v2/files/list?parent_id=${parentId}&oauth_token=${token}`,
     search: (type: PutIoFileType, page?: number) => `https://api.put.io/v2/files/search/type:${type.toLowerCase()}/page/${page || -1}?oauth_token=${token}`

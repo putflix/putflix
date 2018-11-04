@@ -2,7 +2,7 @@ import * as firebase from 'firebase-admin';
 import * as functions from 'firebase-functions';
 import request from 'request-promise-native';
 import { URL } from 'url';
-import { AuthResponse, UserInfo } from '../util/putio';
+import { authenticatedApi, AuthResponse, UserInfo } from '../util/putio';
 
 interface AuthRequest {
     accessCode?: string;
@@ -24,12 +24,10 @@ export const auth = functions.https.onCall(async (data: AuthRequest) => {
         putAuthUrl.searchParams.set('code', data.accessCode);
         putAuthUrl.searchParams.set('redirect_uri', data.accessCode);
 
-        const authResponse: AuthResponse = await request(
-            putAuthUrl.toString(),
-            { json: true },
-        );
+        const authResponse: AuthResponse = await request(putAuthUrl.toString(), { json: true });
+
         const userInfo: UserInfo = await request(
-            `https://api.put.io/v2/account/info?oauth_token=${authResponse.access_token}`,
+            authenticatedApi(authResponse.access_token).accountInfo,
             { json: true },
         );
 
