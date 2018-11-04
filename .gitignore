@@ -25,3 +25,5 @@ functions/lib/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+firebase.config.js
