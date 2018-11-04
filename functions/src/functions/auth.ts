@@ -5,7 +5,8 @@ import { URL } from 'url';
 import { authenticatedApi, AuthResponse, UserInfo } from '../util/putio';
 
 interface AuthRequest {
-    accessCode?: string;
+    accessCode: string;
+    redirectUri: string;
 }
 
 export const auth = functions.https.onCall(async (data: AuthRequest) => {
@@ -16,33 +17,39 @@ export const auth = functions.https.onCall(async (data: AuthRequest) => {
                 "Missing accessCode"
             );
         }
+        if (!data.redirectUri) {
+            throw new functions.https.HttpsError(
+                'invalid-argument',
+                "Missing redirectUri"
+            );
+        }
 
         const putAuthUrl = new URL('https://api.put.io/v2/oauth2/access_token');
         putAuthUrl.searchParams.set('client_id', functions.config().putio.client_id);
         putAuthUrl.searchParams.set('client_secret', functions.config().putio.secret);
         putAuthUrl.searchParams.set('grant_type', 'authorization_code');
         putAuthUrl.searchParams.set('code', data.accessCode);
-        putAuthUrl.searchParams.set('redirect_uri', data.accessCode);
+        putAuthUrl.searchParams.set('redirect_uri', data.redirectUri);
 
         const authResponse: AuthResponse = await request(putAuthUrl.toString(), { json: true });
 
-        const userInfo: UserInfo = await request(
+        const { info }: { info: UserInfo } = await request(
             authenticatedApi(authResponse.access_token).accountInfo,
             { json: true },
         );
 
         try {
-            await firebase.auth().getUser(String(userInfo.user_id));
+            await firebase.auth().getUser(String(info.user_id));
         } catch(e) {
             await firebase.auth().createUser({
-                uid: String(userInfo.user_id),
-                displayName: userInfo.username,
-                photoURL: userInfo.avatar_url,
-                email: userInfo.mail,
+                uid: String(info.user_id),
+                displayName: info.username,
+                photoURL: info.avatar_url,
+                email: info.mail,
             });
         }
 
-        const token = await firebase.auth().createCustomToken(String(userInfo.user_id));
+        const token = await firebase.auth().createCustomToken(String(info.user_id));
 
         return { accessToken: authResponse.access_token, firebaseToken: token };
     } catch(e) {
