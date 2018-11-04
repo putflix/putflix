@@ -2,7 +2,14 @@ import * as firebase from 'firebase-admin';
 import * as functions from 'firebase-functions';
 
 import { db, firestore } from '../util/firestore';
-import { DedupeEntry, IndexingQueueEntry, MediaType, QueueStatus, TmdbQueueEntry, UncategorizedFile } from '../util/types';
+import {
+    DedupeEntry,
+    IndexingQueueEntry,
+    MediaType,
+    QueueStatus,
+    TmdbQueueEntry,
+    UncategorizedFile,
+} from '../util/types';
 
 const indexer = async (
     queueSnap: firebase.firestore.DocumentSnapshot,
@@ -25,7 +32,16 @@ const indexer = async (
     if (dedupSnap.exists) {
         // We have seen this file already. Move it to the appropriate location
         // in the DB and remove the queue entry. We're done.
-        const { type, reference, season_reference, series_reference, series_name, season_number, episode_number, name } = dedupSnap.data() as DedupeEntry;
+        const {
+            type,
+            reference,
+            season_reference,
+            series_reference,
+            series_name,
+            season_number,
+            episode_number,
+            name,
+        } = dedupSnap.data() as DedupeEntry;
         console.log(`Association ${dedupId} -> ${reference} found.`);
 
         const batch = firestore.batch();
@@ -37,12 +53,24 @@ const indexer = async (
                     throw new Error("Found an episode reference but missing season and series reference.");
                 }
 
-                batch.set(user.series(String(series_reference)), { created_at: firebase.firestore.Timestamp.now(), name: series_name }, {merge: true});
-                batch.set(user.season(String(season_reference)), { created_at: firebase.firestore.Timestamp.now(), season_number }, {merge: true});
-                batch.set(user.episode(String(reference)), { ...file, name, season_number, episode_number }, {merge: true});
+                batch.set(
+                    user.series(String(series_reference)),
+                    { created_at: firebase.firestore.Timestamp.now(), name: series_name },
+                    { merge: true },
+                );
+                batch.set(
+                    user.season(String(season_reference)),
+                    { created_at: firebase.firestore.Timestamp.now(), season_number },
+                    { merge: true },
+                );
+                batch.set(
+                    user.episode(String(reference)),
+                    { ...file, name, season_number, episode_number },
+                    { merge: true },
+                );
                 break;
             case MediaType.Movie:
-                batch.set(user.movie(String(reference)), { ...file, name }, {merge: true});
+                batch.set(user.movie(String(reference)), { ...file, name }, { merge: true });
                 break;
             default:
                 throw new Error(`Unknown reference type '${type}'.`);
@@ -66,7 +94,7 @@ const indexer = async (
     } as TmdbQueueEntry);
 };
 
-const indexerFuncRef = functions.firestore.document('/accounts/{accountId}/indexing_queue/{putioId}')
+const indexerFuncRef = functions.firestore.document('/accounts/{accountId}/indexing_queue/{putioId}');
 
 export const indexFileCreate = indexerFuncRef
     .onCreate(async (queueSnap, ctx) => {

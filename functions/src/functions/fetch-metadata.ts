@@ -8,7 +8,7 @@ import { db, firestore } from '../util/firestore';
 import { getSeason, searchMovies, searchShows } from '../util/tmdb';
 import { DedupeEntry, MediaType, QueueStatus, TmdbQueuePayload } from '../util/types';
 
-const fetch = async ({account_id, file}: TmdbQueuePayload) => {
+const fetch = async ({ account_id, file }: TmdbQueuePayload) => {
     // We have not seen this file yet. Parse info from the file name and query TMDb.
     const details = parseTorrentName(file.filename);
     const isTvShow = details.season && details.episode;
@@ -94,7 +94,7 @@ const fetch = async ({account_id, file}: TmdbQueuePayload) => {
 };
 
 export const fetchMetadata = functions.https.onRequest(async (req, res) => {
-    const {account_id, file} = req.body as TmdbQueuePayload;
+    const { account_id, file } = req.body as TmdbQueuePayload;
 
     try {
         await fetch(req.body);
@@ -105,17 +105,17 @@ export const fetchMetadata = functions.https.onRequest(async (req, res) => {
             status: QueueStatus.Waiting,
         });
     } catch (err) {
-        if(err instanceof TooManyRequestsError) {
+        if (err instanceof TooManyRequestsError) {
             res.set('Retry-After', err.retryAfter).status(err.code).send();
             return;
         }
 
-        if(err instanceof RaceConditionError) {
+        if (err instanceof RaceConditionError) {
             res.status(200).json({ msg: err.message });
             return;
         }
 
-        if(err instanceof NotFoundError) {
+        if (err instanceof NotFoundError) {
             // Remove file from the user queue as it isn't needed anymore
             await db.user(account_id).indexingQueueEntry(String(file.putio_id)).delete();
 

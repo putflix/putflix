@@ -60,11 +60,11 @@ const setItemStatus = async (req) => {
 
 export const schedule = functions.https.onRequest(async (req, res) => {
     try {
-        if(req.method === 'GET') {
+        if (req.method === 'GET') {
             const result = await getQueueItems(req);
             console.log(result);
             res.json(result);
-        } else if(req.method === 'POST') {
+        } else if (req.method === 'POST') {
             await setItemStatus(req);
             res.status(202).send();
         } else {

@@ -18,7 +18,10 @@ interface WebhookQuery {
     token?: string;
 }
 
-async function listDirectoryRecursive(api: ReturnType<typeof authenticatedApi>, dirId: number): Promise<PutIoFile[]> {
+async function listDirectoryRecursive(
+    api: ReturnType<typeof authenticatedApi>,
+    dirId: number,
+): Promise<PutIoFile[]> {
     const folderQueue = [];
     const videoFiles = [];
 
@@ -27,10 +30,10 @@ async function listDirectoryRecursive(api: ReturnType<typeof authenticatedApi>, 
         { json: true },
     );
 
-    for(const f of files) {
+    for (const f of files) {
         if (f.file_type === PutIoFileType.Folder) {
             folderQueue.push(listDirectoryRecursive(api, f.id));
-        } else if(f.file_type === PutIoFileType.Video) {
+        } else if (f.file_type === PutIoFileType.Video) {
             videoFiles.push(f);
         }
     }

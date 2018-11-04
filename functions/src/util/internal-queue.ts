@@ -26,7 +26,7 @@ export const deleteOldFiles = async (files: PutIoFile[], uid: string, existingFi
 
     const batch = firestore.batch();
 
-    for(const fileId of deletedFiles) {
+    for (const fileId of deletedFiles) {
         const results = await Promise.all([
             db.user(uid).uncategorizedFiles.where('putio_id', '==', fileId).get(),
             db.user(uid).episodesCollection.where('putio_id', '==', fileId).get(),
@@ -35,7 +35,7 @@ export const deleteOldFiles = async (files: PutIoFile[], uid: string, existingFi
 
         const refs = flatten(results.map(res => res.docs)).map(doc => doc.ref);
 
-        for(const ref of refs) {
+        for (const ref of refs) {
             batch.delete(ref);
         }
     }
@@ -45,7 +45,7 @@ export const deleteOldFiles = async (files: PutIoFile[], uid: string, existingFi
 
 export const insertNewFiles = async (files: PutIoFile[], uid: string, existingFileIds?: number[]) => {
     // Filter out existing files that have already been scanned and errored
-    if(!existingFileIds) {
+    if (!existingFileIds) {
         existingFileIds = await getAllExistingFileIds(uid);
     }
     const newFiles = files.filter(f => !existingFileIds.includes(f.id));

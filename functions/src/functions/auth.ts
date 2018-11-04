@@ -10,7 +10,7 @@ interface AuthRequest {
 
 export const auth = functions.https.onCall(async (data: AuthRequest) => {
     try {
-        if(!data.accessCode) {
+        if (!data.accessCode) {
             throw new functions.https.HttpsError(
                 'invalid-argument',
                 "Missing accessCode"
@@ -24,13 +24,14 @@ export const auth = functions.https.onCall(async (data: AuthRequest) => {
         putAuthUrl.searchParams.set('code', data.accessCode);
         putAuthUrl.searchParams.set('redirect_uri', data.accessCode);
 
-        const authResponse: AuthResponse = await request(putAuthUrl.toString(), {
-            json: true,
-        });
-
-        const userInfo: UserInfo = await request(`https://api.put.io/v2/account/info?oauth_token=${authResponse.access_token}`, {
-            json: true,
-        });
+        const authResponse: AuthResponse = await request(
+            putAuthUrl.toString(),
+            { json: true },
+        );
+        const userInfo: UserInfo = await request(
+            `https://api.put.io/v2/account/info?oauth_token=${authResponse.access_token}`,
+            { json: true },
+        );
 
         try {
             await firebase.auth().getUser(String(userInfo.user_id));
