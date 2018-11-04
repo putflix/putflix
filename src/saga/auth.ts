@@ -1,8 +1,9 @@
+import { SagaIterator } from 'redux-saga';
 import { call, put } from 'redux-saga/effects';
 
-import { getUser, handleOAuthLogin } from '../util/firebase/auth';
-import { SagaIterator } from 'redux-saga';
 import { loginStateChanged } from '../actions/auth';
+import { getUser, handleOAuthLogin } from '../util/firebase/auth';
+import { sagaMiddleware } from '../util/store';
 
 export function* handleOAuthAndSignIn(): SagaIterator {
   const params = new URLSearchParams(location.search);

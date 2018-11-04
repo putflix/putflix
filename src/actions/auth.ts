@@ -1,4 +1,4 @@
-import { wrapAction } from ".";
+import { wrapAction } from '.';
 
 export type Actions =
   | CheckAuthAction;
