@@ -7,7 +7,7 @@ export const handleOAuthLogin = async (accessCode: string) => {
   const { authorize } = await import('./functions');
   const { data } = await authorize({
     accessCode,
-    redirectUri: process.env.REACT_APP_PUTIO_REDIRECT_URL!,
+    redirectUri: location.origin,
   });
 
   await firebase.auth().signInWithCustomToken(data.firebaseToken);
