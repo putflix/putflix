@@ -1,22 +1,34 @@
 import * as React from 'react';
-import { Provider } from 'react-redux';
+import { Provider, connect } from 'react-redux';
 import { MuiThemeProvider } from '@material-ui/core';
 
 import { store, sagaMiddleware } from '../../util/store';
+import { State } from '../../util/state';
 import theme from '../../theme';
 import { Login } from '../login/login';
 import appSaga from '../../saga';
 
 import './app.scss';
 
-const LoginRoute: any = Login;
-
 sagaMiddleware.run(appSaga);
 
-export const App: React.SFC = () => (
-  <Provider store={store}>
-    <MuiThemeProvider theme={theme}>
-      <LoginRoute/>
-    </MuiThemeProvider>
-  </Provider>
-);
+interface LoginOverlayStateProps {
+  isLoggedIn: boolean;
+}
+
+const withLoginOverlayState = connect((state: State) => ({
+  isLoggedIn: !!state.auth.user,
+}));
+const LoginOverlay = withLoginOverlayState(({ isLoggedIn }: LoginOverlayStateProps) => {
+  return isLoggedIn ? null : <Login />
+});
+
+export const App: React.SFC = () => {
+  return (
+    <Provider store={store}>
+      <MuiThemeProvider theme={theme}>
+        <LoginOverlay />
+      </MuiThemeProvider>
+    </Provider>
+  )
+};
