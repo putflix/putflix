@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Provider } from 'react-redux';
 
-import '../../saga';
+import '../../saga/auth';
 import { store } from '../../util/store';
 import { Login } from '../login/login';
 
