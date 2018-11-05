@@ -1,5 +1,6 @@
 import { SagaIterator } from 'redux-saga';
 import { call, put } from 'redux-saga/effects';
+import { navigate } from '@reach/router';
 
 import { loginStateChanged, startLoading, stopLoading } from '../actions/auth';
 import { getUser, handleOAuthLogin } from '../util/firebase/auth';
@@ -13,6 +14,7 @@ export function* handleOAuthAndSignIn(): SagaIterator {
 
     if (code) {
       yield call(handleOAuthLogin, code);
+      yield call(navigate, location.pathname, { replace: true });
     }
 
     const u: firebase.User | null = yield call(getUser);

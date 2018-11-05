@@ -5,7 +5,7 @@ import './library.scss';
 import '../../saga/library';
 
 export const Library = () => {
-
+  return null;
 }
 
 export default Library;
