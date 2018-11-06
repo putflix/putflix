@@ -3,6 +3,6 @@ import { firestore } from '../util/firebase/firestore';
 
 export const sagaId = 'library';
 
-export function* loadLibrary() {
-  firestore.collection('accounts').doc();
+export default function* loadLibrary() {
+  console.warn('Test');
 }

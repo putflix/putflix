@@ -1,19 +1,19 @@
-import { Dialog, DialogContent, DialogTitle } from '@material-ui/core';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@material-ui/core';
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 
 import { startSaga, stopSaga } from '../actions/saga';
-import { SagaIds } from '../saga';
+import { SagaId } from '../saga';
 
 import { State } from './state';
 
 interface SagaStarterOwnProps {
-  id: SagaIds;
+  id: SagaId;
 }
 
 interface SagaStarterStateProps {
-  error?: Error;
-  failed?: boolean;
+  error: Error | null;
+  failed: boolean;
 }
 
 interface SagaStarterDispatchProps {
@@ -32,6 +32,10 @@ class SagaStarterBase extends Component<Props> {
     this.props.stopSaga();
   }
 
+  handleReloadClick = () => {
+    window.location.reload();
+  }
+
   render() {
     const { failed, error, children } = this.props;
 
@@ -40,8 +44,11 @@ class SagaStarterBase extends Component<Props> {
         {failed && <Dialog open>
           <DialogTitle>Oh no. An error occured!</DialogTitle>
           <DialogContent>
-            {error && error.message}
+            <Typography color="error">{error && error.message}</Typography>
           </DialogContent>
+          <DialogActions>
+            <Button onClick={this.handleReloadClick}>Reload PutFlix</Button>
+          </DialogActions>
         </Dialog>}
         {children}
       </>
