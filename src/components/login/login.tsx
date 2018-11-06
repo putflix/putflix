@@ -1,11 +1,11 @@
-import { Button, CircularProgress, Dialog, DialogContent } from "@material-ui/core";
-import * as React from "react";
-import { connect } from "react-redux";
+import { Button, CircularProgress, Dialog, DialogContent } from '@material-ui/core';
+import * as React from 'react';
+import { connect } from 'react-redux';
 
-import { State } from "../../util/state";
-import { putIoAuthorizationUrl } from "../../util/url";
+import { State } from '../../util/state';
+import { putIoAuthorizationUrl } from '../../util/url';
 
-import "./login.scss";
+import './login.scss';
 
 const doLogin = () => location.href = putIoAuthorizationUrl;
 
@@ -19,7 +19,7 @@ const LoginComponent: React.SFC<LoginComponentProps> = ({ isLoading }) => (
       {isLoading
         ? <CircularProgress />
         : (
-          <Button onClick={doLogin} color="primary" variant="contained">
+          <Button onClick={doLogin} color='primary' variant='contained'>
             Login with put.io
           </Button>
         )

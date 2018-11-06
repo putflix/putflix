@@ -1,8 +1,8 @@
 
-import { firestore } from "../util/firebase/firestore";
+import { firestore } from '../util/firebase/firestore';
 
-export const sagaId = "library";
+export const sagaId = 'library';
 
 export function* loadLibrary() {
-  firestore.collection("accounts").doc();
+  firestore.collection('accounts').doc();
 }

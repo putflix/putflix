@@ -1,9 +1,9 @@
-import * as React from "react";
+import * as React from 'react';
 
-import { sagaId } from "../../saga/library";
-import { SagaStarter } from "../../util/saga";
+import { sagaId } from '../../saga/library';
+import { SagaStarter } from '../../util/saga';
 
-import "./library.scss";
+import './library.scss';
 
 class LibraryComponent extends React.Component {
   render() {

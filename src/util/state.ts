@@ -1,4 +1,4 @@
-import { SagaIds } from "../saga";
+import { SagaIds } from '../saga';
 
 export interface AuthState {
   user: firebase.User | null;

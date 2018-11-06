@@ -1,11 +1,11 @@
-import { Dialog, DialogContent, DialogTitle } from "@material-ui/core";
-import React, { Component } from "react";
-import { connect } from "react-redux";
+import { Dialog, DialogContent, DialogTitle } from '@material-ui/core';
+import React, { Component } from 'react';
+import { connect } from 'react-redux';
 
-import { startSaga, stopSaga } from "../actions/saga";
-import { SagaIds } from "../saga";
+import { startSaga, stopSaga } from '../actions/saga';
+import { SagaIds } from '../saga';
 
-import { State } from "./state";
+import { State } from './state';
 
 interface SagaStarterOwnProps {
   id: SagaIds;
