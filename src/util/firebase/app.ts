@@ -1,6 +1,6 @@
-import * as fb from 'firebase/app';
+import * as fb from "firebase/app";
 
-import config from '../../firebase.config';
+import config from "../../firebase.config";
 
 export interface FirebaseInitOptions {
   apiKey: string;

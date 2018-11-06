@@ -1,10 +1,10 @@
 // tslint:disable:ordered-imports
 
-import { firebase } from './app';
-import 'firebase/auth';
+import { firebase } from "./app";
+import "firebase/auth";
 
 export const handleOAuthLogin = async (accessCode: string) => {
-  const { authorize } = await import('./functions');
+  const { authorize } = await import("./functions");
   const { data } = await authorize({
     accessCode,
     redirectUri: location.origin,

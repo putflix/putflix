@@ -1,4 +1,4 @@
-import { wrapAction } from '.';
+import { wrapAction } from ".";
 
 export type Actions =
   | CheckAuthAction
@@ -9,8 +9,8 @@ export type CheckAuthAction = ReturnType<typeof loginStateChanged>;
 export type StartLoadingAction = ReturnType<typeof startLoading>;
 export type StopLoadingAction = ReturnType<typeof stopLoading>;
 
-export const LOGIN_STATE_CHANGED = 'auth/LOGIN_STATE_CHANGED';
-export const LOGIN_LOADING_CHANGED = 'auth/LOGIN_LOADING_CHANGED';
+export const LOGIN_STATE_CHANGED = "auth/LOGIN_STATE_CHANGED";
+export const LOGIN_LOADING_CHANGED = "auth/LOGIN_LOADING_CHANGED";
 
 export const loginStateChanged = (user: firebase.User | null) => wrapAction({
   type: LOGIN_STATE_CHANGED,

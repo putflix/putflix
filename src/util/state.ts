@@ -8,7 +8,7 @@ export interface AuthState {
 export type SagaState = Partial<Map<SagaIds, {
   failed: boolean,
   error: Error | null,
-}>>
+}>>;
 
 export interface State {
   auth: AuthState;

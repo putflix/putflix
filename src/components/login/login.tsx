@@ -1,13 +1,13 @@
-import * as React from 'react';
+import { Button, CircularProgress, Dialog, DialogContent } from "@material-ui/core";
+import * as React from "react";
+import { connect } from "react-redux";
 
-import { putIoAuthorizationUrl } from '../../util/url';
-import { Dialog, DialogContent, Button, CircularProgress } from '@material-ui/core';
+import { State } from "../../util/state";
+import { putIoAuthorizationUrl } from "../../util/url";
 
-import './login.scss';
-import { State } from '../../util/state';
-import { connect } from 'react-redux';
+import "./login.scss";
 
-const doLogin = () => location.href = putIoAuthorizationUrl
+const doLogin = () => location.href = putIoAuthorizationUrl;
 
 interface LoginComponentProps {
   isLoading: boolean;

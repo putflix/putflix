@@ -1,16 +1,16 @@
-import { SagaIterator } from 'redux-saga';
-import { call, put } from 'redux-saga/effects';
-import { navigate } from '@reach/router';
+import { navigate } from "@reach/router";
+import { SagaIterator } from "redux-saga";
+import { call, put } from "redux-saga/effects";
 
-import { loginStateChanged, startLoading, stopLoading } from '../actions/auth';
-import { getUser, handleOAuthLogin } from '../util/firebase/auth';
+import { loginStateChanged, startLoading, stopLoading } from "../actions/auth";
+import { getUser, handleOAuthLogin } from "../util/firebase/auth";
 
 export function* handleOAuthAndSignIn(): SagaIterator {
   try {
     yield put(startLoading());
 
     const params = new URLSearchParams(location.search);
-    const code = params.get('code');
+    const code = params.get("code");
 
     if (code) {
       yield call(handleOAuthLogin, code);

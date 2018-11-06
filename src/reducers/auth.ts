@@ -1,5 +1,5 @@
-import { Actions, LOGIN_STATE_CHANGED, LOGIN_LOADING_CHANGED } from '../actions/auth';
-import { AuthState } from '../util/state';
+import { Actions, LOGIN_LOADING_CHANGED, LOGIN_STATE_CHANGED } from "../actions/auth";
+import { AuthState } from "../util/state";
 
 export default (state: AuthState = { user: null, isLoading: false }, ac: Actions) => {
   switch (ac.type) {
@@ -12,8 +12,8 @@ export default (state: AuthState = { user: null, isLoading: false }, ac: Actions
       return {
         ...state,
         isLoading: ac.payload,
-      }
+      };
     default:
       return state;
   }
-}
+};

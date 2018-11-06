@@ -1,9 +1,9 @@
-import { combineReducers } from 'redux';
+import { combineReducers } from "redux";
 
-import { State } from '../util/state';
+import { State } from "../util/state";
 
-import authReducer from './auth';
-import sagaReducer from './sagas';
+import authReducer from "./auth";
+import sagaReducer from "./sagas";
 
 export default combineReducers<State>({
   auth: authReducer,

@@ -1,16 +1,16 @@
-import * as React from 'react';
-import { Provider, connect } from 'react-redux';
-import { MuiThemeProvider } from '@material-ui/core';
-import { Router, RouteComponentProps } from '@reach/router';
+import { MuiThemeProvider } from "@material-ui/core";
+import { Router, RouteComponentProps } from "@reach/router";
+import * as React from "react";
+import { connect, Provider } from "react-redux";
 
-import { store, sagaMiddleware } from '../../util/store';
-import { State } from '../../util/state';
-import theme from '../../theme';
-import { Login } from '../login/login';
-import appSaga from '../../saga';
-import { Library } from '../library/library';
+import appSaga from "../../saga";
+import theme from "../../theme";
+import { State } from "../../util/state";
+import { sagaMiddleware, store } from "../../util/store";
+import { Library } from "../library/library";
+import { Login } from "../login/login";
 
-import './app.scss';
+import "./app.scss";
 
 sagaMiddleware.run(appSaga);
 
@@ -22,7 +22,7 @@ const withLoginOverlayState = connect((state: State) => ({
   isLoggedIn: !!state.auth.user,
 }));
 const LoginOverlay = withLoginOverlayState(({ isLoggedIn }: LoginOverlayStateProps) => {
-  return isLoggedIn ? null : <Login />
+  return isLoggedIn ? null : <Login />;
 });
 
 const LibraryRoute: React.ComponentType<RouteComponentProps> = Library as any;
@@ -37,5 +37,5 @@ export const App: React.SFC = () => {
         </Router>
       </MuiThemeProvider>
     </Provider>
-  )
+  );
 };

@@ -1,6 +1,6 @@
-import { Action } from 'redux';
+import { Action } from "redux";
 
-import { Actions as CheckAuthActions } from './auth';
+import { Actions as CheckAuthActions } from "./auth";
 
 export type Actions = CheckAuthActions;
 

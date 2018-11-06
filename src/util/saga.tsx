@@ -1,10 +1,11 @@
-import React, { Component } from 'react';
+import { Dialog, DialogContent, DialogTitle } from "@material-ui/core";
+import React, { Component } from "react";
+import { connect } from "react-redux";
 
-import { SagaIds } from '../saga';
-import { State } from './state';
-import { connect } from 'react-redux';
-import { startSaga, stopSaga } from '../actions/saga';
-import { Dialog, DialogContent, DialogTitle } from '@material-ui/core';
+import { startSaga, stopSaga } from "../actions/saga";
+import { SagaIds } from "../saga";
+
+import { State } from "./state";
 
 interface SagaStarterOwnProps {
   id: SagaIds;
@@ -44,7 +45,7 @@ class SagaStarterBase extends Component<Props> {
         </Dialog>}
         {children}
       </>
-    )
+    );
   }
 }
 

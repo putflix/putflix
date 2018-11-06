@@ -1,14 +1,15 @@
-import { take, fork } from 'redux-saga/effects';
+import { fork, take } from "redux-saga/effects";
 
-import { handleOAuthAndSignIn } from './auth';
-import { sagaId as libraryId } from './library';
-import { loginStateChanged } from '../actions/auth';
+import { loginStateChanged } from "../actions/auth";
+
+import { handleOAuthAndSignIn } from "./auth";
+import { sagaId as libraryId } from "./library";
 
 export type SagaIds =
   | typeof libraryId;
 
 export default function* app() {
-  while(true) {
+  while (true) {
     yield fork(handleOAuthAndSignIn);
     const user = yield take(loginStateChanged);
     if (!user) {

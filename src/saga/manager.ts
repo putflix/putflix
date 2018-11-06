@@ -1,5 +1,6 @@
-import { takeEvery } from 'redux-saga';
-import { START_SAGA, STOP_SAGA } from '../actions/saga';
+import { takeEvery } from "redux-saga";
+
+import { START_SAGA, STOP_SAGA } from "../actions/saga";
 
 export function* startSaga() {
   // todo
