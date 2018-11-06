@@ -60,7 +60,7 @@ const fetch = async ({ account_id, file }: TmdbQueuePayload) => {
         const { crew, guest_stars, ...episodeData } = episode;
 
         batch.set(db.tmdbSeries.doc(String(seriesData.id)), seriesData);
-        batch.set(db.tmdbSeasons.doc(String(seasonData.id)), seasonData);
+        batch.set(db.tmdbSeasons.doc(String(seasonData.id)), {...seasonData, series_reference: seriesData.id});
         batch.set(db.tmdbEpisodes.doc(String(episodeData.id)), episodeData);
 
         batch.set(dedupRef, {

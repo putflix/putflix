@@ -60,12 +60,12 @@ const indexer = async (
                 );
                 batch.set(
                     user.season(String(season_reference)),
-                    { created_at: firebase.firestore.Timestamp.now(), season_number },
+                    { created_at: firebase.firestore.Timestamp.now(), season_number, series_reference },
                     { merge: true },
                 );
                 batch.set(
                     user.episode(String(reference)),
-                    { ...file, name, season_number, episode_number },
+                    { ...file, name, season_number, episode_number, series_reference },
                     { merge: true },
                 );
                 break;
