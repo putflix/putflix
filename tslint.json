@@ -22,7 +22,7 @@
     "object-literal-sort-keys": false,
     "ordered-imports": [true, { "grouped-imports": true, "named-imports-order": "lowercase-first" }],
     "prefer-template": [true, "allow-single-concat"],
-    "quotemark": [true, "single"],
+    "quotemark": [true, "single", "jsx-double"],
     "radix": false,
     "space-before-function-paren": false,
     "whitespace": [

@@ -21,6 +21,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "fix": "tslint --project tsconfig.json --fix",
+    "lint": "tslint --project tsconfig.json",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "postinstall": "yarn --cwd functions install"

@@ -19,7 +19,7 @@ const LoginComponent: React.SFC<LoginComponentProps> = ({ isLoading }) => (
       {isLoading
         ? <CircularProgress />
         : (
-          <Button onClick={doLogin} color='primary' variant='contained'>
+          <Button onClick={doLogin} color="primary" variant="contained">
             Login with put.io
           </Button>
         )

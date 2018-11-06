@@ -33,7 +33,7 @@ export const App: React.SFC = () => {
       <MuiThemeProvider theme={theme}>
         <LoginOverlay />
         <Router>
-          <LibraryRoute path='/' />
+          <LibraryRoute path="/" />
         </Router>
       </MuiThemeProvider>
     </Provider>
