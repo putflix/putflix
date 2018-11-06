@@ -12,7 +12,18 @@ export interface SagaState {
   };
 }
 
+export interface MediaEntry {
+  id: string;
+  name: string;
+}
+
+export interface LibraryState {
+  series: MediaEntry[];
+  movies: MediaEntry[];
+}
+
 export interface State {
   auth: AuthState;
   sagas: SagaState;
+  library: LibraryState;
 }

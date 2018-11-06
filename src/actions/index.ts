@@ -1,11 +1,13 @@
 import { Action } from 'redux';
 
 import { Actions as CheckAuthActions } from './auth';
+import { Actions as LibraryActions } from './library';
 import { Actions as SagaActions } from './saga';
 
 export type Actions =
   | CheckAuthActions
-  | SagaActions;
+  | SagaActions
+  | LibraryActions;
 
 /**
  * A function to bend TypeScripts inference to correctly infer action types.
