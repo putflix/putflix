@@ -1,7 +1,11 @@
-import { sagaMiddleware } from '../util/store';
+import { take, fork } from 'redux-saga/effects';
+
 import { handleOAuthAndSignIn } from './auth';
-import { call, take, fork } from 'redux-saga/effects';
+import { sagaId as libraryId } from './library';
 import { loginStateChanged } from '../actions/auth';
+
+export type SagaIds =
+  | typeof libraryId;
 
 export default function* app() {
   while(true) {

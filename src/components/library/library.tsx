@@ -2,9 +2,17 @@ import * as React from 'react';
 
 import './library.scss';
 
-import '../../saga/library';
+import { sagaId } from '../../saga/library';
+import { SagaStarter } from '../../util/saga';
 
-export const Library = () => {
-  return null;
+class LibraryComponent extends React.Component {
+  render() {
+    return (
+      <SagaStarter id={sagaId}>
+        <div></div>
+      </SagaStarter>
+    );
+  }
 }
 
+export const Library = LibraryComponent;
