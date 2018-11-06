@@ -8,7 +8,7 @@ import { State } from '../../util/state';
 import theme from '../../theme';
 import { Login } from '../login/login';
 import appSaga from '../../saga';
-import Library from '../library/library';
+import { Library } from '../library/library';
 
 import './app.scss';
 
