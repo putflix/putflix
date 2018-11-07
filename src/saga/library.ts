@@ -28,7 +28,10 @@ export default function* loadLibrary() {
 
   while (true) {
     const snap = yield take(seriesChannel);
+    const series = snap.docs
+      .map(d => ({name: d.data().name, id: d.id}))
+      .sort((a, b) => a.name.localeCompare(b.name));
 
-    yield put(setSeries(snap.docs.map(d => ({name: d.data().name, id: d.id}))));
+    yield put(setSeries(series));
   }
 }
